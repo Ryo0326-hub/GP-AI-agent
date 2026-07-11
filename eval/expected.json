@@ -1,0 +1,539 @@
+{
+  "math_011": {
+    "answer": 171,
+    "kind": "number"
+  },
+  "math_012": {
+    "answer": 246,
+    "kind": "number"
+  },
+  "math_013": {
+    "answer": 136,
+    "kind": "number"
+  },
+  "math_014": {
+    "answer": 186,
+    "kind": "number"
+  },
+  "math_015": {
+    "answer": 67.5,
+    "kind": "number"
+  },
+  "math_016": {
+    "answer": 240,
+    "kind": "number"
+  },
+  "math_017": {
+    "answer": 135,
+    "kind": "number"
+  },
+  "math_018": {
+    "answer": 63.0,
+    "kind": "number"
+  },
+  "math_019": {
+    "answer": 54,
+    "kind": "number"
+  },
+  "math_020": {
+    "answer": 900.0,
+    "kind": "number"
+  },
+  "sentiment_021": {
+    "answer": "mixed",
+    "kind": "label"
+  },
+  "sentiment_022": {
+    "answer": "positive",
+    "kind": "label"
+  },
+  "sentiment_023": {
+    "answer": "negative",
+    "kind": "label"
+  },
+  "sentiment_024": {
+    "answer": "neutral",
+    "kind": "label"
+  },
+  "sentiment_025": {
+    "answer": "positive",
+    "kind": "label"
+  },
+  "sentiment_026": {
+    "answer": "negative",
+    "kind": "label"
+  },
+  "sentiment_027": {
+    "answer": "mixed",
+    "kind": "label"
+  },
+  "sentiment_028": {
+    "answer": "neutral",
+    "kind": "label"
+  },
+  "sentiment_029": {
+    "answer": "positive",
+    "kind": "label"
+  },
+  "sentiment_030": {
+    "answer": "negative",
+    "kind": "label"
+  },
+  "ner_041": {
+    "answer": [
+      "Maria Sanchez:person",
+      "Fireworks AI:organization",
+      "Berlin:location",
+      "March:date"
+    ],
+    "kind": "entities"
+  },
+  "ner_042": {
+    "answer": [
+      "Tim Cook:person",
+      "Apple:organization",
+      "Tokyo:location",
+      "January 15, 2024:date",
+      "SoftBank:organization"
+    ],
+    "kind": "entities"
+  },
+  "ner_043": {
+    "answer": [
+      "World Health Organization:organization",
+      "Nairobi:location",
+      "2019:date"
+    ],
+    "kind": "entities"
+  },
+  "ner_044": {
+    "answer": [
+      "Elon Musk:person",
+      "SpaceX:organization",
+      "California:location",
+      "2002:date"
+    ],
+    "kind": "entities"
+  },
+  "ner_045": {
+    "answer": [
+      "Angela Merkel:person",
+      "Emmanuel Macron:person",
+      "Paris:location",
+      "Tuesday:date"
+    ],
+    "kind": "entities"
+  },
+  "ner_046": {
+    "answer": [
+      "Amazon:organization",
+      "Andy Jassy:person",
+      "Seattle:location",
+      "March 3:date"
+    ],
+    "kind": "entities"
+  },
+  "ner_047": {
+    "answer": [
+      "Louvre:organization",
+      "Paris:location",
+      "British Museum:organization",
+      "London:location"
+    ],
+    "kind": "entities"
+  },
+  "ner_048": {
+    "answer": [
+      "Serena Williams:person",
+      "New York:location",
+      "September 2022:date"
+    ],
+    "kind": "entities"
+  },
+  "ner_049": {
+    "answer": [
+      "Toyota:organization",
+      "Honda:organization",
+      "Japan:location"
+    ],
+    "kind": "entities"
+  },
+  "ner_050": {
+    "answer": [
+      "Jane Goodall:person",
+      "Cambridge University:organization",
+      "Friday:date"
+    ],
+    "kind": "entities"
+  },
+  "debug_051": {
+    "answer": [
+      {
+        "args": [
+          [
+            3,
+            9,
+            1
+          ]
+        ],
+        "expected": 9
+      }
+    ],
+    "kind": "code_tests"
+  },
+  "debug_052": {
+    "answer": [
+      {
+        "args": [
+          [
+            2,
+            4,
+            6
+          ]
+        ],
+        "expected": 4.0
+      }
+    ],
+    "kind": "code_tests"
+  },
+  "debug_053": {
+    "answer": [
+      {
+        "args": [
+          "abcd"
+        ],
+        "expected": "dcba"
+      }
+    ],
+    "kind": "code_tests"
+  },
+  "debug_054": {
+    "answer": [
+      {
+        "args": [
+          "hello"
+        ],
+        "expected": 2
+      }
+    ],
+    "kind": "code_tests"
+  },
+  "debug_055": {
+    "answer": [
+      {
+        "args": [
+          [
+            1,
+            2,
+            3,
+            4
+          ]
+        ],
+        "expected": [
+          2,
+          4
+        ]
+      }
+    ],
+    "kind": "code_tests"
+  },
+  "debug_056": {
+    "answer": [
+      {
+        "args": [
+          [
+            1,
+            2,
+            3
+          ]
+        ],
+        "expected": 6
+      }
+    ],
+    "kind": "code_tests"
+  },
+  "debug_057": {
+    "answer": [
+      {
+        "args": [
+          4
+        ],
+        "expected": true
+      },
+      {
+        "args": [
+          3
+        ],
+        "expected": false
+      }
+    ],
+    "kind": "code_tests"
+  },
+  "debug_058": {
+    "answer": [
+      {
+        "args": [
+          [
+            1,
+            2,
+            3
+          ]
+        ],
+        "expected": 3
+      }
+    ],
+    "kind": "code_tests"
+  },
+  "debug_059": {
+    "answer": [
+      {
+        "args": [
+          [
+            1,
+            5
+          ]
+        ],
+        "expected": [
+          2,
+          10
+        ]
+      }
+    ],
+    "kind": "code_tests"
+  },
+  "debug_060": {
+    "answer": [
+      {
+        "args": [
+          [
+            1
+          ],
+          [
+            2
+          ]
+        ],
+        "expected": [
+          1,
+          2
+        ]
+      }
+    ],
+    "kind": "code_tests"
+  },
+  "logic_061": {
+    "answer": "Sam",
+    "kind": "contains"
+  },
+  "logic_062": {
+    "answer": "Ben",
+    "kind": "contains"
+  },
+  "logic_063": {
+    "answer": "Pia",
+    "kind": "contains"
+  },
+  "logic_064": {
+    "answer": "Kim",
+    "kind": "contains"
+  },
+  "logic_065": {
+    "answer": "Mia",
+    "kind": "contains"
+  },
+  "logic_066": {
+    "answer": "no",
+    "kind": "contains"
+  },
+  "logic_067": {
+    "answer": "Cara",
+    "kind": "contains"
+  },
+  "logic_068": {
+    "answer": "4",
+    "kind": "contains"
+  },
+  "logic_069": {
+    "answer": "no",
+    "kind": "contains"
+  },
+  "logic_070": {
+    "answer": "Tia",
+    "kind": "contains"
+  },
+  "codegen_071": {
+    "answer": [
+      {
+        "args": [
+          [
+            1,
+            2,
+            2,
+            3
+          ]
+        ],
+        "expected": 2
+      },
+      {
+        "args": [
+          [
+            5,
+            1,
+            4
+          ]
+        ],
+        "expected": 4
+      }
+    ],
+    "kind": "code_tests"
+  },
+  "codegen_072": {
+    "answer": [
+      {
+        "args": [
+          "Racecar"
+        ],
+        "expected": true
+      },
+      {
+        "args": [
+          "hello"
+        ],
+        "expected": false
+      }
+    ],
+    "kind": "code_tests"
+  },
+  "codegen_073": {
+    "answer": [
+      {
+        "args": [
+          5
+        ],
+        "expected": 120
+      },
+      {
+        "args": [
+          0
+        ],
+        "expected": 1
+      }
+    ],
+    "kind": "code_tests"
+  },
+  "codegen_074": {
+    "answer": [
+      {
+        "args": [
+          [
+            1,
+            2,
+            3,
+            4
+          ]
+        ],
+        "expected": 6
+      }
+    ],
+    "kind": "code_tests"
+  },
+  "codegen_075": {
+    "answer": [
+      {
+        "args": [
+          "hello world"
+        ],
+        "expected": 3
+      }
+    ],
+    "kind": "code_tests"
+  },
+  "codegen_076": {
+    "answer": [
+      {
+        "args": [
+          "abc"
+        ],
+        "expected": "cba"
+      }
+    ],
+    "kind": "code_tests"
+  },
+  "codegen_077": {
+    "answer": [
+      {
+        "args": [
+          7
+        ],
+        "expected": true
+      },
+      {
+        "args": [
+          8
+        ],
+        "expected": false
+      },
+      {
+        "args": [
+          1
+        ],
+        "expected": false
+      }
+    ],
+    "kind": "code_tests"
+  },
+  "codegen_078": {
+    "answer": [
+      {
+        "args": [
+          [
+            3,
+            1,
+            3,
+            2,
+            1
+          ]
+        ],
+        "expected": [
+          3,
+          1,
+          2
+        ]
+      }
+    ],
+    "kind": "code_tests"
+  },
+  "codegen_079": {
+    "answer": [
+      {
+        "args": [
+          "the quick brownest fox"
+        ],
+        "expected": "brownest"
+      }
+    ],
+    "kind": "code_tests"
+  },
+  "codegen_080": {
+    "answer": [
+      {
+        "args": [
+          [
+            1,
+            3
+          ],
+          [
+            2,
+            4
+          ]
+        ],
+        "expected": [
+          1,
+          2,
+          3,
+          4
+        ]
+      }
+    ],
+    "kind": "code_tests"
+  }
+}

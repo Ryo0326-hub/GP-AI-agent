@@ -1,0 +1,13 @@
+.git
+.env
+.env.*
+eval/
+tests/
+test_input/
+test_output/
+__pycache__/
+*.pyc
+.pytest_cache/
+Makefile
+README.md
+*.gguf

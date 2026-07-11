@@ -1,0 +1,13 @@
+# Submission fallback: API-first image with no bundled local model.
+# It uses the same orchestrator and runtime allowlist, but starts immediately
+# and avoids a multi-gigabyte registry layer when upload bandwidth is limited.
+FROM python:3.11-slim
+
+RUN pip install --no-cache-dir requests
+
+COPY app/ /app/
+
+ENV MODEL_PATH=/models/not-installed.gguf \
+    PYTHONUNBUFFERED=1
+
+ENTRYPOINT ["python", "/app/main.py"]

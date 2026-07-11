@@ -1,0 +1,322 @@
+[
+  {
+    "task_id": "factual_001",
+    "prompt": "What is the capital of Australia, and what body of water is it near?"
+  },
+  {
+    "task_id": "factual_002",
+    "prompt": "Explain in two or three sentences what photosynthesis is and why it matters."
+  },
+  {
+    "task_id": "factual_003",
+    "prompt": "Who wrote the novel '1984', and in what year was it published?"
+  },
+  {
+    "task_id": "factual_004",
+    "prompt": "What is the chemical symbol for gold, and what group of metals does it belong to?"
+  },
+  {
+    "task_id": "factual_005",
+    "prompt": "Name the largest planet in our solar system and one of its famous features."
+  },
+  {
+    "task_id": "factual_006",
+    "prompt": "What is the difference between a virus and a bacterium?"
+  },
+  {
+    "task_id": "factual_007",
+    "prompt": "Which country hosted the 2016 Summer Olympics, and in which city?"
+  },
+  {
+    "task_id": "factual_008",
+    "prompt": "What does HTTP stand for, and what is it used for?"
+  },
+  {
+    "task_id": "factual_009",
+    "prompt": "What is the boiling point of water at sea level in Celsius and Fahrenheit?"
+  },
+  {
+    "task_id": "factual_010",
+    "prompt": "Explain what a stock market index is, giving one example."
+  },
+  {
+    "task_id": "math_011",
+    "prompt": "A store has 240 items. It sells 10% of them on Monday and 45 more on Tuesday. How many items remain?"
+  },
+  {
+    "task_id": "math_012",
+    "prompt": "A store has 360 items. It sells 15% of them on Monday and 60 more on Tuesday. How many items remain?"
+  },
+  {
+    "task_id": "math_013",
+    "prompt": "A store has 240 items. It sells 10% of them on Monday and 80 more on Tuesday. How many items remain?"
+  },
+  {
+    "task_id": "math_014",
+    "prompt": "A store has 240 items. It sells 10% of them on Monday and 30 more on Tuesday. How many items remain?"
+  },
+  {
+    "task_id": "math_015",
+    "prompt": "A train travels at 45 km per hour for 1.5 hours. How far does it travel in km?"
+  },
+  {
+    "task_id": "math_016",
+    "prompt": "A train travels at 80 km per hour for 3 hours. How far does it travel in km?"
+  },
+  {
+    "task_id": "math_017",
+    "prompt": "A train travels at 45 km per hour for 3 hours. How far does it travel in km?"
+  },
+  {
+    "task_id": "math_018",
+    "prompt": "A jacket costs $80. It is discounted by 15%, then a $5 coupon is applied. What is the final price in dollars?"
+  },
+  {
+    "task_id": "math_019",
+    "prompt": "Tom has 3 boxes with 24 pencils each. He gives away 18 pencils. How many pencils does he have left?"
+  },
+  {
+    "task_id": "math_020",
+    "prompt": "A recipe needs 250 g of flour for 10 cookies. How many grams are needed for 36 cookies?"
+  },
+  {
+    "task_id": "sentiment_021",
+    "prompt": "Classify the sentiment of this review: The battery life is great, but the screen scratches too easily."
+  },
+  {
+    "task_id": "sentiment_022",
+    "prompt": "Classify the sentiment of this review: Absolutely love this product, works perfectly every time!"
+  },
+  {
+    "task_id": "sentiment_023",
+    "prompt": "Classify the sentiment of this review: Terrible customer service, I waited two hours and nobody helped me."
+  },
+  {
+    "task_id": "sentiment_024",
+    "prompt": "Classify the sentiment of this review: The food arrived on time. It was okay, nothing special."
+  },
+  {
+    "task_id": "sentiment_025",
+    "prompt": "Classify the sentiment of this review: Best purchase I've made all year, highly recommend it."
+  },
+  {
+    "task_id": "sentiment_026",
+    "prompt": "Classify the sentiment of this review: The app crashes constantly and support never replies. Avoid."
+  },
+  {
+    "task_id": "sentiment_027",
+    "prompt": "Classify the sentiment of this review: Great camera and display, though the price is steep and shipping was slow."
+  },
+  {
+    "task_id": "sentiment_028",
+    "prompt": "Classify the sentiment of this review: It does what it says. No complaints, no surprises."
+  },
+  {
+    "task_id": "sentiment_029",
+    "prompt": "Classify the sentiment of this review: I was skeptical at first, but this exceeded all my expectations!"
+  },
+  {
+    "task_id": "sentiment_030",
+    "prompt": "Classify the sentiment of this review: Broke after one week. Complete waste of money."
+  },
+  {
+    "task_id": "summarization_031",
+    "prompt": "Summarize the following paragraph in exactly one sentence: The Amazon rainforest, spanning nine countries in South America, produces about 20 percent of the world's oxygen and hosts an estimated 10 percent of all species on Earth. Deforestation, driven largely by cattle ranching and agriculture, has accelerated in recent decades, threatening biodiversity and contributing to climate change."
+  },
+  {
+    "task_id": "summarization_032",
+    "prompt": "Summarize the following paragraph in no more than 25 words: The Amazon rainforest, spanning nine countries in South America, produces about 20 percent of the world's oxygen and hosts an estimated 10 percent of all species on Earth. Deforestation, driven largely by cattle ranching and agriculture, has accelerated in recent decades, threatening biodiversity and contributing to climate change."
+  },
+  {
+    "task_id": "summarization_033",
+    "prompt": "Summarize the following paragraph in exactly one sentence: Electric vehicles are becoming increasingly popular as battery costs fall and charging infrastructure expands. Governments around the world are offering incentives to buyers and setting deadlines to phase out combustion engines, while automakers are investing billions in new electric models."
+  },
+  {
+    "task_id": "summarization_034",
+    "prompt": "Summarize the following paragraph in no more than 25 words: Electric vehicles are becoming increasingly popular as battery costs fall and charging infrastructure expands. Governments around the world are offering incentives to buyers and setting deadlines to phase out combustion engines, while automakers are investing billions in new electric models."
+  },
+  {
+    "task_id": "summarization_035",
+    "prompt": "Summarize the following paragraph in exactly one sentence: The ancient city of Pompeii was buried under volcanic ash when Mount Vesuvius erupted in 79 AD. Rediscovered in the 18th century, its remarkably preserved ruins offer archaeologists a unique snapshot of daily Roman life, from bakeries and baths to frescoes and graffiti."
+  },
+  {
+    "task_id": "summarization_036",
+    "prompt": "Summarize the following paragraph in no more than 25 words: The ancient city of Pompeii was buried under volcanic ash when Mount Vesuvius erupted in 79 AD. Rediscovered in the 18th century, its remarkably preserved ruins offer archaeologists a unique snapshot of daily Roman life, from bakeries and baths to frescoes and graffiti."
+  },
+  {
+    "task_id": "summarization_037",
+    "prompt": "Summarize the following paragraph in exactly one sentence: Remote work surged during the pandemic and has remained common in many industries. Companies report savings on office space and access to wider talent pools, while employees value flexibility, though some managers worry about collaboration and company culture."
+  },
+  {
+    "task_id": "summarization_038",
+    "prompt": "Summarize the following paragraph in no more than 25 words: Remote work surged during the pandemic and has remained common in many industries. Companies report savings on office space and access to wider talent pools, while employees value flexibility, though some managers worry about collaboration and company culture."
+  },
+  {
+    "task_id": "summarization_039",
+    "prompt": "Summarize the following paragraph in exactly one sentence: Honeybees play a critical role in agriculture by pollinating roughly a third of the crops humans eat. In recent years, colony collapse disorder, pesticides, and habitat loss have caused alarming declines in bee populations, prompting research and conservation efforts worldwide."
+  },
+  {
+    "task_id": "summarization_040",
+    "prompt": "Summarize the following paragraph in no more than 25 words: Honeybees play a critical role in agriculture by pollinating roughly a third of the crops humans eat. In recent years, colony collapse disorder, pesticides, and habitat loss have caused alarming declines in bee populations, prompting research and conservation efforts worldwide."
+  },
+  {
+    "task_id": "ner_041",
+    "prompt": "Extract all named entities and their types (person, organization, location, date) from: Maria Sanchez joined Fireworks AI in Berlin last March."
+  },
+  {
+    "task_id": "ner_042",
+    "prompt": "Extract all named entities and their types (person, organization, location, date) from: Apple CEO Tim Cook visited Tokyo on January 15, 2024 to meet with SoftBank executives."
+  },
+  {
+    "task_id": "ner_043",
+    "prompt": "Extract all named entities and their types (person, organization, location, date) from: The World Health Organization opened a new office in Nairobi in 2019."
+  },
+  {
+    "task_id": "ner_044",
+    "prompt": "Extract all named entities and their types (person, organization, location, date) from: Elon Musk founded SpaceX in California in 2002."
+  },
+  {
+    "task_id": "ner_045",
+    "prompt": "Extract all named entities and their types (person, organization, location, date) from: Angela Merkel met French President Emmanuel Macron in Paris last Tuesday."
+  },
+  {
+    "task_id": "ner_046",
+    "prompt": "Extract all named entities and their types (person, organization, location, date) from: Amazon announced that Andy Jassy will speak at the Seattle conference on March 3."
+  },
+  {
+    "task_id": "ner_047",
+    "prompt": "Extract all named entities and their types (person, organization, location, date) from: The Louvre in Paris displayed works borrowed from the British Museum in London."
+  },
+  {
+    "task_id": "ner_048",
+    "prompt": "Extract all named entities and their types (person, organization, location, date) from: Serena Williams won her final match in New York in September 2022."
+  },
+  {
+    "task_id": "ner_049",
+    "prompt": "Extract all named entities and their types (person, organization, location, date) from: Toyota and Honda both reported record sales in Japan last quarter."
+  },
+  {
+    "task_id": "ner_050",
+    "prompt": "Extract all named entities and their types (person, organization, location, date) from: Dr. Jane Goodall gave a lecture at Cambridge University on Friday."
+  },
+  {
+    "task_id": "debug_051",
+    "prompt": "This function should return the max of a list but has a bug: def get_max(nums): return nums[0]. Find and fix it."
+  },
+  {
+    "task_id": "debug_052",
+    "prompt": "This function should compute the average but has a bug: def avg(nums): return sum(nums) / (len(nums) + 1). Find and fix it."
+  },
+  {
+    "task_id": "debug_053",
+    "prompt": "This function should reverse a string but has a bug: def rev(s): return s[::2]. Find and fix it."
+  },
+  {
+    "task_id": "debug_054",
+    "prompt": "This function should count vowels but has a bug: def count_vowels(s): return sum(1 for c in s if c in 'aeiou' and c.isupper()). Find and fix it."
+  },
+  {
+    "task_id": "debug_055",
+    "prompt": "This function should return even numbers but has a bug: def evens(nums): return [n for n in nums if n % 2 == 1]. Find and fix it."
+  },
+  {
+    "task_id": "debug_056",
+    "prompt": "This function should sum a list but has a bug: def total(nums):\n    t = 0\n    for n in nums:\n        t = n\n    return t\nFind and fix it."
+  },
+  {
+    "task_id": "debug_057",
+    "prompt": "This function should check if a number is even but has a bug: def is_even(n): return n % 2 == 1. Find and fix it."
+  },
+  {
+    "task_id": "debug_058",
+    "prompt": "This function should return the last element but has a bug: def last(items): return items[len(items)]. Find and fix it."
+  },
+  {
+    "task_id": "debug_059",
+    "prompt": "This function should double every number but has a bug: def double_all(nums): return [n + 2 for n in nums]. Find and fix it."
+  },
+  {
+    "task_id": "debug_060",
+    "prompt": "This function should concatenate two lists but has a bug: def combine(a, b): return a - b. Find and fix it."
+  },
+  {
+    "task_id": "logic_061",
+    "prompt": "Three friends, Sam, Jo, and Lee, each own a different pet: cat, dog, bird. Sam does not own the bird. Jo owns the dog. Who owns the cat?"
+  },
+  {
+    "task_id": "logic_062",
+    "prompt": "Three colleagues, Ana, Ben, and Cara, each drink a different beverage: coffee, tea, juice. Ana does not drink tea. Cara drinks juice. Who drinks tea?"
+  },
+  {
+    "task_id": "logic_063",
+    "prompt": "Four kids, Max, Nia, Omar, and Pia, each play a different sport: soccer, tennis, chess, golf. Max plays chess. Nia does not play soccer and does not play golf. Omar plays golf. Who plays soccer?"
+  },
+  {
+    "task_id": "logic_064",
+    "prompt": "Three neighbors, Ivy, Jack, and Kim, each own a different car: sedan, truck, coupe. Jack owns the truck. Ivy does not own the coupe. Who owns the coupe?"
+  },
+  {
+    "task_id": "logic_065",
+    "prompt": "Three students, Leo, Mia, and Noah, each like a different fruit: apple, banana, cherry. Noah likes the banana. Leo does not like the apple. Who likes the apple?"
+  },
+  {
+    "task_id": "logic_066",
+    "prompt": "If all roses are flowers and some flowers fade quickly, can we conclude that some roses fade quickly? Answer yes or no and explain briefly."
+  },
+  {
+    "task_id": "logic_067",
+    "prompt": "Amy is taller than Beth. Beth is taller than Cara. Who is the shortest?"
+  },
+  {
+    "task_id": "logic_068",
+    "prompt": "A farmer has chickens and rabbits, 10 heads and 28 legs in total. How many rabbits are there?"
+  },
+  {
+    "task_id": "logic_069",
+    "prompt": "Dan always lies and Erin always tells the truth. Dan says 'Erin said it is raining.' Is it necessarily true that Erin said that? Answer yes or no and explain."
+  },
+  {
+    "task_id": "logic_070",
+    "prompt": "In a race, Uma finished before Vic, and Vic finished before Wes. Tia finished after Uma but before Vic. Who finished second?"
+  },
+  {
+    "task_id": "codegen_071",
+    "prompt": "Write a Python function that returns the second-largest number in a list, handling duplicates correctly."
+  },
+  {
+    "task_id": "codegen_072",
+    "prompt": "Write a Python function that checks whether a string is a palindrome (ignore case)."
+  },
+  {
+    "task_id": "codegen_073",
+    "prompt": "Write a Python function that computes the factorial of a non-negative integer."
+  },
+  {
+    "task_id": "codegen_074",
+    "prompt": "Write a Python function that returns the sum of all even numbers in a list."
+  },
+  {
+    "task_id": "codegen_075",
+    "prompt": "Write a Python function that counts the vowels in a string (lowercase input)."
+  },
+  {
+    "task_id": "codegen_076",
+    "prompt": "Write a Python function that reverses a string without using built-in reverse functions."
+  },
+  {
+    "task_id": "codegen_077",
+    "prompt": "Write a Python function that returns True if a number is prime, False otherwise."
+  },
+  {
+    "task_id": "codegen_078",
+    "prompt": "Write a Python function that removes duplicate values from a list while preserving order."
+  },
+  {
+    "task_id": "codegen_079",
+    "prompt": "Write a Python function that finds the longest word in a sentence string."
+  },
+  {
+    "task_id": "codegen_080",
+    "prompt": "Write a Python function that merges two sorted lists into one sorted list."
+  }
+]

@@ -1,0 +1,78 @@
+[
+  {
+    "task_id": "factual_001",
+    "prompt": "What is the capital of Australia, and what body of water is it near?"
+  },
+  {
+    "task_id": "factual_006",
+    "prompt": "What is the difference between a virus and a bacterium?"
+  },
+  {
+    "task_id": "factual_010",
+    "prompt": "Explain what a stock market index is, giving one example."
+  },
+  {
+    "task_id": "math_011",
+    "prompt": "A store has 240 items. It sells 10% of them on Monday and 45 more on Tuesday. How many items remain?"
+  },
+  {
+    "task_id": "math_016",
+    "prompt": "A train travels at 80 km per hour for 3 hours. How far does it travel in km?"
+  },
+  {
+    "task_id": "math_020",
+    "prompt": "A recipe needs 250 g of flour for 10 cookies. How many grams are needed for 36 cookies?"
+  },
+  {
+    "task_id": "sentiment_021",
+    "prompt": "Classify the sentiment of this review: The battery life is great, but the screen scratches too easily."
+  },
+  {
+    "task_id": "sentiment_026",
+    "prompt": "Classify the sentiment of this review: The app crashes constantly and support never replies. Avoid."
+  },
+  {
+    "task_id": "summarization_031",
+    "prompt": "Summarize the following paragraph in exactly one sentence: The Amazon rainforest, spanning nine countries in South America, produces about 20 percent of the world's oxygen and hosts an estimated 10 percent of all species on Earth. Deforestation, driven largely by cattle ranching and agriculture, has accelerated in recent decades, threatening biodiversity and contributing to climate change."
+  },
+  {
+    "task_id": "summarization_036",
+    "prompt": "Summarize the following paragraph in no more than 25 words: The ancient city of Pompeii was buried under volcanic ash when Mount Vesuvius erupted in 79 AD. Rediscovered in the 18th century, its remarkably preserved ruins offer archaeologists a unique snapshot of daily Roman life, from bakeries and baths to frescoes and graffiti."
+  },
+  {
+    "task_id": "ner_041",
+    "prompt": "Extract all named entities and their types (person, organization, location, date) from: Maria Sanchez joined Fireworks AI in Berlin last March."
+  },
+  {
+    "task_id": "ner_046",
+    "prompt": "Extract all named entities and their types (person, organization, location, date) from: Amazon announced that Andy Jassy will speak at the Seattle conference on March 3."
+  },
+  {
+    "task_id": "debug_051",
+    "prompt": "This function should return the max of a list but has a bug: def get_max(nums): return nums[0]. Find and fix it."
+  },
+  {
+    "task_id": "debug_056",
+    "prompt": "This function should sum a list but has a bug: def total(nums):\n    t = 0\n    for n in nums:\n        t = n\n    return t\nFind and fix it."
+  },
+  {
+    "task_id": "logic_061",
+    "prompt": "Three friends, Sam, Jo, and Lee, each own a different pet: cat, dog, bird. Sam does not own the bird. Jo owns the dog. Who owns the cat?"
+  },
+  {
+    "task_id": "logic_066",
+    "prompt": "If all roses are flowers and some flowers fade quickly, can we conclude that some roses fade quickly? Answer yes or no and explain briefly."
+  },
+  {
+    "task_id": "logic_070",
+    "prompt": "In a race, Uma finished before Vic, and Vic finished before Wes. Tia finished after Uma but before Vic. Who finished second?"
+  },
+  {
+    "task_id": "codegen_071",
+    "prompt": "Write a Python function that returns the second-largest number in a list, handling duplicates correctly."
+  },
+  {
+    "task_id": "codegen_076",
+    "prompt": "Write a Python function that reverses a string without using built-in reverse functions."
+  }
+]

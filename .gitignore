@@ -1,0 +1,15 @@
+.env
+.env.*
+!.env.example
+.claude/
+claude_code_prompt_track1.md
+__pycache__/
+*.pyc
+.pytest_cache/
+test_output/
+tmp/
+demo/node_modules/
+demo/.next/
+demo/.vercel/
+demo/.env.local
+.DS_Store

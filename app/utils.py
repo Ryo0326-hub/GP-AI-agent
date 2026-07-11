@@ -101,3 +101,24 @@ def sentence_count(text: str) -> int:
 
 def word_count(text: str) -> int:
     return len(re.findall(r"\S+", text or ""))
+
+
+def rss_mb() -> float:
+    """Resident memory in MB (Linux /proc, macOS getrusage fallback)."""
+    try:
+        with open("/proc/self/status") as f:
+            for line in f:
+                if line.startswith("VmRSS:"):
+                    return int(line.split()[1]) / 1024.0
+    except OSError:
+        pass
+    try:
+        import resource
+        peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        return peak / (1024.0 * 1024.0) if sys.platform == "darwin" else peak / 1024.0
+    except Exception:  # noqa: BLE001
+        return 0.0
+
+
+def log_rss(stage: str) -> None:
+    log.info("rss at %s: %.0f MB", stage, rss_mb())

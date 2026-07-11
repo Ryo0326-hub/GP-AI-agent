@@ -1,0 +1,15 @@
+{
+  "tag": "15b_2cpu",
+  "tok_s_devbox": 4.917661675949937,
+  "categories": {
+    "factual": {
+      "n": 5,
+      "accuracy": 1.0,
+      "verified_correct": 5,
+      "unverified_correct": 0,
+      "p90_completion_tokens": 21,
+      "mean_latency_s": 2.32
+    }
+  },
+  "overall_accuracy": 1.0
+}

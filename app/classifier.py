@@ -8,7 +8,11 @@ import re
 CATEGORIES = ("sentiment", "summarization", "ner", "debug", "codegen",
               "math", "logic", "factual")
 
-_CODE_HINT = re.compile(r"```|\bdef \w+|\bfunction\b|\breturn\b|\bclass \w+\(|=>|\bprintln\b|\bconsole\.log\b")
+_CODE_HINT = re.compile(
+    r"```|\bdef \w+|\bfunction\b|\breturn\b|\bclass \w+\(|=>|"
+    r"\bprintln\b|\bconsole\.log\b",
+    re.IGNORECASE,
+)
 _DEBUG = re.compile(r"\bbug(s|gy)?\b|\bdebug\b|\bfix(es|ed|ing)?\b|\bincorrect(ly)?\b|\bdoesn'?t work\b|\bnot work(ing)?\b|\berror\b|\bwrong (output|result|answer)\b")
 _CODEGEN = re.compile(
     r"\b(write|create|implement|develop|code|build)\b[^.?!]{0,60}\b(function|program|script|method|class|snippet|code)\b"

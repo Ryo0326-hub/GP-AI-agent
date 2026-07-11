@@ -16,7 +16,8 @@ MAX_TOKENS = {
     "codegen": 400,
 }
 
-# Escalation caps: raw prompt to the Fireworks model, so allow a bit more room.
+# Escalation caps: category system prompt plus user prompt, with enough room for
+# a complete hosted-model answer while keeping token spend bounded.
 ESCALATION_MAX_TOKENS = {
     "sentiment": 200,
     "ner": 400,

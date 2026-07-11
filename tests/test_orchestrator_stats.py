@@ -10,6 +10,7 @@ import types
 class StubLM:
     def __init__(self, path):
         self.cutoff_count = 0
+        self.tok_per_sec = 10.0
 
     def benchmark(self):
         return 10.0

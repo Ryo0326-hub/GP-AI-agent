@@ -1,0 +1,4 @@
+# Router training only. On the AMD MI300X box install the ROCm torch build
+# first (see README "Training on AMD MI300X"), then the rest:
+torch
+transformers>=4.40,<5

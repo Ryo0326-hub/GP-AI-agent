@@ -1,23 +1,33 @@
-"""Track 1 agent orchestrator.
+"""Track 1 agent orchestrator, v2: learned router + budget-aware plan.
 
-Reads /input/tasks.json, answers every task (local-first, verified, rare
-Fireworks escalation), writes /output/results.json incrementally and
-atomically, and exits 0. All logging goes to stderr.
+Reads /input/tasks.json, answers every task, writes /output/results.json
+incrementally and atomically, and exits 0. All logging goes to stderr.
+
+Flow: score every task with the learned compact router at startup ->
+tasks predicted to fail locally are dispatched to Fireworks immediately and
+concurrently (category prompt, tight caps) -> everything else is solved locally in
+ascending estimated cost, admitted task-by-task against the real clock ->
+deterministic verification stays as a cheap second gate, with single-task
+escalation (not panic bulk escalation) as the fallback.
 """
 import logging
 import os
 import re
 import sys
+import threading
 import time
 from collections import Counter
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed, wait
 
+from budget import (build_plan, estimate_local_cost, fits_deadline,
+                    resolve_threshold)
 from classifier import classify
 from fireworks import Fireworks
 from prompts import (CODE_REPAIR_SYSTEM, ESCALATION_MAX_TOKENS, MATH_RETRY_SYSTEM,
                      MAX_TOKENS, SYSTEM)
+from router import load_config, score_and_free
 from utils import (atomic_write_json, extract_labeled_line, extract_last_number,
-                   load_tasks, log, numbers_equal, setup_logging)
+                   load_tasks, log, log_rss, numbers_equal, setup_logging)
 from verify import (check_summary, extract_code, generic_smoke_tests,
                     looks_confident, parse_summary_constraints, run_code_tests,
                     safe_eval, solve_assignment_puzzle, synthesize_tests)
@@ -27,10 +37,19 @@ OUTPUT_PATH = os.environ.get("OUTPUT_PATH", "/output/results.json")
 MODEL_PATH = os.environ.get("MODEL_PATH", "/models/model.gguf")
 TOTAL_DEADLINE_S = float(os.environ.get("TOTAL_DEADLINE_S", "540"))  # 9 min
 PER_TASK_CAP_S = float(os.environ.get("PER_TASK_CAP_S", "25"))       # <30s rule
-PER_TASK_MIN_S = float(os.environ.get("PER_TASK_MIN_S", "20"))       # budget floor
-LOCAL_SOLVE_CAP_S = float(os.environ.get("LOCAL_SOLVE_CAP_S", "18")) # reserve escalation time
+LOCAL_SOLVE_CAP_S = float(os.environ.get("LOCAL_SOLVE_CAP_S", "18"))
 MIN_LOCAL_TOK_S = float(os.environ.get("MIN_LOCAL_TOK_S", "4"))       # slow-CPU circuit breaker
-BULK_ABORT_AFTER = 3  # consecutive initial bulk-escalation failures before giving up
+RESERVE_S = float(os.environ.get("RESERVE_S", "25"))   # endgame: collect escalations + final write
+# The general rules require every request to finish in under 30 seconds. Keep
+# a full second of hard headroom even if a development env tries to raise the
+# timeout. Queueing and a preceding local attempt are charged to this same
+# end-to-end budget by _complete_with_task_deadline below.
+MAX_REQUEST_S = 29.0
+ESCALATION_TIMEOUT_S = min(
+    float(os.environ.get("ESCALATION_TIMEOUT_S", "25")), MAX_REQUEST_S)
+TIGHT_ESCALATION_CAP = int(os.environ.get("TIGHT_ESCALATION_CAP", "160"))
+ESCALATION_WORKERS = 6
+BULK_ABORT_AFTER = 3  # probe wave; only definitive provider failures stop the rest
 ESCALATE_UNVERIFIED_LOGIC = os.environ.get("ESCALATE_UNVERIFIED_LOGIC", "1") == "1"
 
 FALLBACK_ANSWER = "Unable to fully determine the answer within the time limit."
@@ -42,6 +61,9 @@ ESCALATED = "escalated"
 FALLBACK = "fallback"
 
 LAST_RUN_STATS = None  # set by main() for tests/inspection
+
+_WRITE_LOCK = threading.RLock()  # escalation callbacks write concurrently
+_FINALIZED = False  # guarded by _WRITE_LOCK; late callbacks become no-ops
 
 
 def _fmt_num(v):
@@ -60,7 +82,8 @@ def _strip_expression_line(text: str) -> str:
 
 # --------------------------------------------------------------- category solvers
 # Each returns (answer_text, verified) where verified=True means we trust the
-# answer enough to skip escalation.
+# answer enough to skip escalation. Each solver includes at most ONE local
+# retry on verification failure; after that the orchestrator escalates.
 
 def solve_math(lm, prompt, budget):
     t0 = time.monotonic()
@@ -240,27 +263,90 @@ def solve_task(lm, prompt, category, budget):
 
 # ------------------------------------------------------------------- orchestration
 
-def plan_budget(remaining: float, todo: int, fw_available: bool):
-    """Per-task time policy.
-
-    Returns ("bulk", None) when there isn't enough time to give every remaining
-    task at least PER_TASK_MIN_S locally and Fireworks can take over; otherwise
-    ("local", budget) with budget clamped to [PER_TASK_MIN_S, PER_TASK_CAP_S]
-    (degraded below the floor only when there is no escalation path at all —
-    a squeezed local answer beats no answer).
-    """
-    todo = max(1, todo)
-    if remaining < todo * PER_TASK_MIN_S + 15.0:
-        if fw_available:
-            return "bulk", None
-        return "local", max(4.0, remaining / todo)
-    return "local", min(PER_TASK_CAP_S, max(PER_TASK_MIN_S, remaining / todo))
-
-
-def write_partial(tasks, answers):
+def _write_partial_locked(tasks, answers):
+    """Write the current snapshot while the caller holds ``_WRITE_LOCK``."""
     results = [{"task_id": str(t.get("task_id", i)), "answer": answers[i]}
                for i, t in enumerate(tasks) if answers.get(i)]
     atomic_write_json(OUTPUT_PATH, results)
+
+
+def write_partial(tasks, answers):
+    """Write a partial snapshot unless final output has been committed."""
+    with _WRITE_LOCK:
+        if _FINALIZED:
+            return False
+        _write_partial_locked(tasks, answers)
+        return True
+
+
+def record(i, answer, path, tasks, answers, paths, overwrite=True):
+    """Thread-safe result recording + incremental write."""
+    with _WRITE_LOCK:
+        if _FINALIZED:
+            return False
+        if not overwrite and (answers.get(i) or "").strip():
+            return False
+        answers[i] = answer
+        paths[i] = path
+        # Keep the state mutation and snapshot write in one critical section.
+        # Otherwise finalization can land between them and a late callback can
+        # replace the complete file with an incomplete partial snapshot.
+        _write_partial_locked(tasks, answers)
+        return True
+
+
+def _complete_with_task_deadline(fw, prompt, cap, task_started_at, deadline,
+                                 system=None):
+    """Call Fireworks within the task's real end-to-end time budget.
+
+    This function runs inside the executor worker, so time spent waiting in
+    the executor queue is included.  For reactive escalations,
+    ``task_started_at`` is the start of the local attempt, preventing an 18s
+    local solve followed by a fresh 25s remote allowance.
+    """
+    now = time.monotonic()
+    per_task_budget = min(PER_TASK_CAP_S, MAX_REQUEST_S)
+    remaining = min(
+        ESCALATION_TIMEOUT_S,
+        task_started_at + per_task_budget - now,
+        deadline - now - 2.0,
+    )
+    if remaining < 1.0:
+        log.warning("skipping escalation: task deadline exhausted in queue")
+        return ""
+    return fw.complete(prompt, cap, timeout=remaining, system=system)
+
+
+def submit_escalations(ex, fw, tasks, categories, indices, answers, paths,
+                       deadline, cap_override=None, task_starts=None):
+    """Dispatch tasks to Fireworks concurrently; results land via callbacks
+    the moment each completes, so partial output is always current.
+
+    ``task_starts`` optionally maps an index to the beginning of its local
+    attempt. Missing entries start their end-to-end clock when queued.
+    """
+    futures = {}
+    for i in indices:
+        prompt = str(tasks[i].get("prompt", ""))
+        cap = cap_override or ESCALATION_MAX_TOKENS.get(categories[i], 300)
+        system = SYSTEM.get(categories[i])
+        queued_at = time.monotonic()
+        task_started_at = (task_starts or {}).get(i, queued_at)
+        fut = ex.submit(_complete_with_task_deadline, fw, prompt, cap,
+                        task_started_at, deadline, system)
+
+        def _cb(f, i=i):
+            try:
+                ans = f.result() or ""
+            except Exception as e:  # noqa: BLE001
+                log.warning("escalation for task %d failed: %s", i, e)
+                ans = ""
+            if ans.strip():
+                record(i, ans, ESCALATED, tasks, answers, paths, overwrite=False)
+
+        fut.add_done_callback(_cb)
+        futures[fut] = i
+    return futures
 
 
 def _escalate_batch(ex, fw, tasks, indices, answers, paths, deadline):
@@ -268,11 +354,20 @@ def _escalate_batch(ex, fw, tasks, indices, answers, paths, deadline):
     futures = {}
     for i in indices:
         prompt = str(tasks[i].get("prompt", ""))
-        cap = ESCALATION_MAX_TOKENS.get(classify(prompt), 300)
-        futures[ex.submit(fw.complete, prompt, cap)] = i
+        category = classify(prompt)
+        cap = ESCALATION_MAX_TOKENS.get(category, 300)
+        system = SYSTEM.get(category)
+        task_started_at = time.monotonic()
+        futures[ex.submit(_complete_with_task_deadline, fw, prompt, cap,
+                          task_started_at, deadline, system)] = i
     successes = 0
+    timeout = deadline - time.monotonic() - 2.0
+    if timeout <= 0:
+        for future in futures:
+            future.cancel()
+        return 0
     try:
-        for fut in as_completed(futures, timeout=max(10.0, deadline - time.monotonic())):
+        for fut in as_completed(futures, timeout=timeout):
             i = futures[fut]
             try:
                 answer = fut.result() or ""
@@ -280,10 +375,8 @@ def _escalate_batch(ex, fw, tasks, indices, answers, paths, deadline):
                 log.warning("bulk escalation task %d failed: %s", i, e)
                 answer = ""
             if answer:
-                answers[i] = answer
-                paths[i] = ESCALATED
+                record(i, answer, ESCALATED, tasks, answers, paths, overwrite=False)
                 successes += 1
-                write_partial(tasks, answers)
     except TimeoutError:
         log.warning("bulk escalation hit the deadline")
         for f in futures:
@@ -291,33 +384,46 @@ def _escalate_batch(ex, fw, tasks, indices, answers, paths, deadline):
     return successes
 
 
-def bulk_escalate(fw, tasks, pending, answers, paths, deadline):
-    """Escalate all pending tasks concurrently; a few hundred tokens beat a timeout.
-
-    Probes the first BULK_ABORT_AFTER tasks first: if every probe fails, the
-    endpoint is dead and the remaining tasks are never attempted (no burning
-    2 HTTP calls per task on a dead route). Returns the indices still
-    unanswered so the caller can fall back to local answers.
-    """
+def bulk_escalate(fw, tasks, pending, answers, paths, deadline, executor=None):
+    """Escalate all pending tasks concurrently (used only when the local model
+    is unusable). Probes the first BULK_ABORT_AFTER tasks first, but abandons
+    the rest only after a definitive provider/configuration failure. Transient
+    probe failures continue so a brief 429/5xx wave cannot create mass
+    fallbacks. Returns the indices still unanswered."""
     log.info("bulk escalation of %d remaining tasks", len(pending))
     probes, rest = pending[:BULK_ABORT_AFTER], pending[BULK_ABORT_AFTER:]
-    with ThreadPoolExecutor(max_workers=6) as ex:
+
+    def run(ex):
         probe_successes = _escalate_batch(ex, fw, tasks, probes, answers, paths, deadline)
-        if probe_successes == 0:
+        definitive_failure = (
+            not getattr(fw, "available", False)
+            or getattr(fw, "definitive_unavailable", False)
+        )
+        if probe_successes == 0 and definitive_failure:
             log.warning("first %d escalations all failed; abandoning bulk "
-                        "escalation, falling back to local answers", len(probes))
+                        "after a definitive provider failure", len(probes))
         elif rest:
+            if probe_successes == 0:
+                log.warning("initial escalation probes failed transiently; "
+                            "continuing instead of creating mass fallbacks")
             _escalate_batch(ex, fw, tasks, rest, answers, paths, deadline)
-    return [i for i in pending if paths.get(i) != ESCALATED]
+        return [i for i in pending if paths.get(i) != ESCALATED]
+
+    if executor is not None:
+        return run(executor)
+    with ThreadPoolExecutor(max_workers=ESCALATION_WORKERS) as owned_executor:
+        return run(owned_executor)
 
 
 def main() -> int:
-    global LAST_RUN_STATS
+    global LAST_RUN_STATS, _FINALIZED
+    with _WRITE_LOCK:
+        _FINALIZED = False
     setup_logging()
     start = time.monotonic()
     deadline = start + TOTAL_DEADLINE_S
-    log.info("agent starting (deadline %.0fs, per-task floor %.0fs cap %.0fs)",
-             TOTAL_DEADLINE_S, PER_TASK_MIN_S, PER_TASK_CAP_S)
+    log.info("agent v2 starting (deadline %.0fs, local cap %.0fs, reserve %.0fs)",
+             TOTAL_DEADLINE_S, LOCAL_SOLVE_CAP_S, RESERVE_S)
 
     try:
         os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
@@ -326,120 +432,201 @@ def main() -> int:
 
     tasks = load_tasks(INPUT_PATH)
     n = len(tasks)
-    categories = Counter(classify(str(t.get("prompt", ""))) for t in tasks)
-    log.info("loaded %d tasks: %s", n, dict(categories))
+    prompts = [str(t.get("prompt", "")) for t in tasks]
+    categories = [classify(p) for p in prompts]
+    cat_counts = Counter(categories)
+    log.info("loaded %d tasks: %s", n, dict(cat_counts))
     answers = {}
     paths = {}  # index -> LOCAL_VERIFIED | LOCAL_UNVERIFIED | ESCALATED | FALLBACK
     atomic_write_json(OUTPUT_PATH, [])  # valid JSON exists from second zero
+    log_rss("startup")
+
+    # ---- router scoring (zero tokens; weights freed before llama loads) ----
+    config = load_config()
+    threshold = resolve_threshold(config)
+    policy = (config or {}).get("category_policy") or {}
+    trust_local = set(policy.get("trust_local") or ())
+    expected_tokens = (config or {}).get("expected_completion_tokens") or {}
+    scores = score_and_free(prompts) if n else []
+    log_rss("router scored")
 
     fw = Fireworks()
     log.info("fireworks available=%s model=%s allowed=%d",
              fw.available, fw.model, len(fw.allowed))
 
+    escalate_now, local_queue = build_plan(prompts, categories, scores,
+                                           threshold, policy,
+                                           expected_tokens=expected_tokens)
+    if not fw.available and escalate_now:
+        log.warning("no Fireworks path; the %d planned escalations go local",
+                    len(escalate_now))
+        escalate_now, local_queue = build_plan(prompts, categories, None, 2.0,
+                                               {}, expected_tokens=expected_tokens)
+    log.info("plan: %d immediate escalations, %d local "
+             "(router=%s threshold=%.2f policy=%s)",
+             len(escalate_now), len(local_queue),
+             "on" if scores else "off", threshold, policy or "{}")
+
+    ex = ThreadPoolExecutor(max_workers=ESCALATION_WORKERS)
+    futures = {}
+    if escalate_now:
+        futures.update(submit_escalations(ex, fw, tasks, categories,
+                                          escalate_now, answers, paths, deadline))
+
+    # ---- local model (loads while the planned escalations are in flight) ----
     lm = None
+    emergency_lm = None
     try:
         from local_model import LocalLM
         lm = LocalLM(MODEL_PATH)
+        emergency_lm = lm
         speed = lm.benchmark()
+        log_rss("llama loaded")
+        log.info("startup complete in %.1fs (constraint: <60s)",
+                 time.monotonic() - start)
         if fw.available and speed < MIN_LOCAL_TOK_S:
             log.warning("local model too slow (%.1f < %.1f tok/s); using Fireworks "
                         "to protect latency and accuracy", speed, MIN_LOCAL_TOK_S)
             lm = None
     except Exception as e:  # noqa: BLE001
         log.error("local model unavailable, will escalate everything: %s", e)
+        lm = None
+        emergency_lm = None
 
-    pending = list(range(n))
+    backup = {}  # local answers kept as fallback for in-flight escalations
 
-    if lm is not None:
-        for i in list(pending):
+    if lm is None:
+        if fw.available and local_queue:
+            bulk_escalate(fw, tasks, local_queue, answers, paths, deadline,
+                          executor=ex)
+    else:
+        # Re-rank with the measured speed, then admit against the real clock.
+        local_queue.sort(key=lambda i: estimate_local_cost(
+            prompts[i], categories[i], lm.tok_per_sec,
+            expected_tokens.get(categories[i])))
+        reserve = RESERVE_S if fw.available else 5.0
+        for pos, i in enumerate(local_queue):
             remaining = deadline - time.monotonic()
-            mode, budget = plan_budget(remaining, len(pending), fw.available)
-            if mode == "bulk":
-                log.warning("behind pace (%.0fs for %d tasks, floor %.0fs) -> "
-                            "bulk escalation", remaining, len(pending), PER_TASK_MIN_S)
-                break
-            prompt = str(tasks[i].get("prompt", ""))
-            category = classify(prompt)
+            est = estimate_local_cost(prompts[i], categories[i], lm.tok_per_sec,
+                                      expected_tokens.get(categories[i]))
+            if not fits_deadline(est, remaining, reserve):
+                if fw.available:
+                    log.warning("task %d no longer fits locally (est %.0fs, "
+                                "%.0fs left); escalating with tight cap", i, est,
+                                remaining)
+                    futures.update(submit_escalations(
+                        ex, fw, tasks, categories, [i], answers, paths,
+                        deadline, cap_override=TIGHT_ESCALATION_CAP))
+                    continue
+                # No escalation path: degrade budgets, never skip.
+                todo_left = len(local_queue) - pos
+                budget = max(3.0, min(PER_TASK_CAP_S,
+                                      (remaining - 5.0) / max(1, todo_left)))
+            else:
+                budget = min(PER_TASK_CAP_S, LOCAL_SOLVE_CAP_S,
+                             max(4.0, remaining - reserve))
             t0 = time.monotonic()
-            local_budget = min(budget, LOCAL_SOLVE_CAP_S)
             try:
-                answer, verified = solve_task(lm, prompt, category, local_budget)
+                answer, verified = solve_task(lm, prompts[i], categories[i], budget)
             except Exception as e:  # noqa: BLE001
                 log.warning("task %d local solve error: %s", i, e)
                 answer, verified = "", False
             if verified:
-                paths[i] = LOCAL_VERIFIED
-            else:
-                esc = ""
-                # PER_TASK_CAP_S is end-to-end: local attempts and escalation
-                # share one budget rather than each receiving a fresh timeout.
-                escalation_budget = budget - (time.monotonic() - t0) - 0.5
-                if fw.available and escalation_budget >= 1.0:
-                    esc = fw.complete(
-                        prompt,
-                        ESCALATION_MAX_TOKENS.get(category, 300),
-                        timeout=escalation_budget,
-                    )
-                if esc:
-                    answer = esc
-                    paths[i] = ESCALATED
-                elif (answer or "").strip():
-                    paths[i] = LOCAL_UNVERIFIED
-                else:
-                    answer = FALLBACK_ANSWER
-                    paths[i] = FALLBACK
-            answers[i] = answer
-            pending.remove(i)
-            write_partial(tasks, answers)
-            log.info("task %d/%d [%s] path=%s in %.1fs (local/total budget %.0f/%.0fs)",
-                     i + 1, n, category, paths[i], time.monotonic() - t0,
-                     local_budget, budget)
-
-    if pending:
-        still = list(pending)
-        if fw.available:
-            still = bulk_escalate(fw, tasks, pending, answers, paths, deadline)
-        if still and lm is not None:
-            log.info("answering %d remaining tasks locally (degraded budgets)", len(still))
-            for i in still:
-                remaining = deadline - time.monotonic()
-                budget = max(3.0, min(PER_TASK_CAP_S, remaining / max(1, len(still))))
-                prompt = str(tasks[i].get("prompt", ""))
-                category = classify(prompt)
-                try:
-                    answer, verified = solve_task(lm, prompt, category, budget)
-                except Exception:  # noqa: BLE001
-                    answer, verified = "", False
+                record(i, answer, LOCAL_VERIFIED, tasks, answers, paths)
+            elif (answer or "").strip() and categories[i] in trust_local:
+                record(i, answer, LOCAL_UNVERIFIED, tasks, answers, paths)
+            elif fw.available:
                 if (answer or "").strip():
-                    paths[i] = LOCAL_VERIFIED if verified else LOCAL_UNVERIFIED
-                    answers[i] = answer
-                write_partial(tasks, answers)
+                    backup[i] = answer
+                futures.update(submit_escalations(ex, fw, tasks, categories,
+                                                  [i], answers, paths, deadline,
+                                                  task_starts={i: t0}))
+            elif (answer or "").strip():
+                record(i, answer, LOCAL_UNVERIFIED, tasks, answers, paths)
+            else:
+                record(i, FALLBACK_ANSWER, FALLBACK, tasks, answers, paths)
+            log.info("task %d/%d [%s] path=%s in %.1fs (budget %.0fs est %.0fs)",
+                     i + 1, n, categories[i], paths.get(i, "escalating"),
+                     time.monotonic() - t0, budget, est)
+
+    # ---- endgame: collect in-flight escalations, then fill any gaps ----
+    if futures:
+        wait_s = max(0.0, deadline - time.monotonic() - 3.0)
+        done, not_done = wait(list(futures), timeout=wait_s)
+        for f in not_done:
+            f.cancel()
+        # Callbacks normally record results; drain directly as a belt-and-braces
+        # against a callback that hasn't run yet.
+        for f in done:
+            i = futures[f]
+            try:
+                ans = f.result() or ""
+            except Exception:  # noqa: BLE001
+                ans = ""
+            if ans.strip():
+                record(i, ans, ESCALATED, tasks, answers, paths, overwrite=False)
+    ex.shutdown(wait=False, cancel_futures=True)
+
+    with _WRITE_LOCK:
+        unanswered = [i for i in range(n) if not (answers.get(i) or "").strip()]
+    for i in unanswered:
+        if backup.get(i):
+            record(i, backup[i], LOCAL_UNVERIFIED, tasks, answers, paths,
+                   overwrite=False)
+        elif emergency_lm is not None and deadline - time.monotonic() > 10.0:
+            budget = max(3.0, min(LOCAL_SOLVE_CAP_S,
+                                  deadline - time.monotonic() - 5.0))
+            try:
+                answer, verified = solve_task(
+                    emergency_lm, prompts[i], categories[i], budget)
+            except Exception:  # noqa: BLE001
+                answer, verified = "", False
+            if (answer or "").strip():
+                record(i, answer,
+                       LOCAL_VERIFIED if verified else LOCAL_UNVERIFIED,
+                       tasks, answers, paths, overwrite=False)
 
     # Final validation: every task_id present, every answer a non-empty string.
-    results = []
-    for i, t in enumerate(tasks):
-        a = answers.get(i)
-        if not isinstance(a, str) or not a.strip():
-            a = FALLBACK_ANSWER
-            paths[i] = FALLBACK
-        paths.setdefault(i, FALLBACK)
-        results.append({"task_id": str(t.get("task_id", i)), "answer": a})
-    atomic_write_json(OUTPUT_PATH, results)
+    with _WRITE_LOCK:
+        results = []
+        for i, t in enumerate(tasks):
+            a = answers.get(i)
+            if not isinstance(a, str) or not a.strip():
+                a = FALLBACK_ANSWER
+                answers[i] = a
+                paths[i] = FALLBACK
+            paths.setdefault(i, FALLBACK)
+            results.append({"task_id": str(t.get("task_id", i)), "answer": a})
+        # Flip the guard before the final write while holding the lock. Any
+        # running provider callback that completes later will observe this and
+        # cannot replace the complete file with a partial snapshot.
+        _FINALIZED = True
+        atomic_write_json(OUTPUT_PATH, results)
 
     path_counts = Counter(paths[i] for i in range(n))
-    cutoffs = lm.cutoff_count if lm is not None else 0
-    LAST_RUN_STATS = {"paths": dict(path_counts), "categories": dict(categories),
+    cutoffs = emergency_lm.cutoff_count if emergency_lm is not None else 0
+    LAST_RUN_STATS = {"paths": dict(path_counts), "categories": dict(cat_counts),
                       "fw_attempted": fw.calls_attempted,
                       "fw_succeeded": fw.calls_succeeded,
-                      "fw_tokens": fw.total_tokens, "cutoffs": cutoffs}
+                      "fw_tokens": fw.total_tokens, "cutoffs": cutoffs,
+                      "fw_usage_derived": getattr(
+                          fw, "derived_usage_calls", 0),
+                      "fw_usage_unknown": getattr(
+                          fw, "unknown_usage_calls", 0),
+                      "router_scored": bool(scores),
+                      "planned_escalations": len(escalate_now),
+                      "threshold": threshold}
     log.info("done: answered=%d in %.1fs | local-verified=%d local-unverified=%d "
-             "escalated=%d fallback=%d | fireworks attempted=%d succeeded=%d "
-             "tokens=%d | cutoffs=%d | categories=%s",
+             "escalated=%d fallback=%d | planned-escalations=%d router=%s | "
+             "fireworks attempted=%d succeeded=%d known-tokens=%d "
+             "usage-derived=%d usage-unknown=%d | cutoffs=%d | categories=%s",
              n, time.monotonic() - start,
              path_counts.get(LOCAL_VERIFIED, 0), path_counts.get(LOCAL_UNVERIFIED, 0),
              path_counts.get(ESCALATED, 0), path_counts.get(FALLBACK, 0),
+             len(escalate_now), "on" if scores else "off",
              fw.calls_attempted, fw.calls_succeeded, fw.total_tokens,
-             cutoffs, dict(categories))
+             getattr(fw, "derived_usage_calls", 0),
+             getattr(fw, "unknown_usage_calls", 0), cutoffs, dict(cat_counts))
     return 0
 
 

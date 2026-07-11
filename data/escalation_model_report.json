@@ -1,0 +1,84 @@
+[
+  {
+    "model": "accounts/fireworks/models/gpt-oss-20b",
+    "mode": "default",
+    "n": 20,
+    "correct": 14,
+    "accuracy": 0.7,
+    "total_tokens": 7882,
+    "tokens_per_correct": 563.0,
+    "call_errors": 0
+  },
+  {
+    "model": "accounts/fireworks/models/gpt-oss-20b",
+    "mode": "reasoning_effort=none",
+    "n": 20,
+    "correct": 0,
+    "accuracy": 0.0,
+    "total_tokens": 0,
+    "tokens_per_correct": 0.0,
+    "call_errors": 1,
+    "tasks_not_run": 19,
+    "probe_error": "HTTP 400: {\"error\":{\"object\":\"error\",\"type\":\"invalid_request_error\",\"code\":\"invalid_request_error\",\"message\":\"Invalid reasoning ef"
+  },
+  {
+    "model": "accounts/fireworks/models/deepseek-v4-flash",
+    "mode": "default",
+    "n": 20,
+    "correct": 14,
+    "accuracy": 0.7,
+    "total_tokens": 6670,
+    "tokens_per_correct": 476.4,
+    "call_errors": 0
+  },
+  {
+    "model": "accounts/fireworks/models/deepseek-v4-flash",
+    "mode": "reasoning_effort=none",
+    "n": 20,
+    "correct": 17,
+    "accuracy": 0.85,
+    "total_tokens": 4516,
+    "tokens_per_correct": 265.6,
+    "call_errors": 0
+  },
+  {
+    "model": "accounts/fireworks/models/kimi-k2p6",
+    "mode": "default",
+    "n": 20,
+    "correct": 12,
+    "accuracy": 0.6,
+    "total_tokens": 7871,
+    "tokens_per_correct": 655.9,
+    "call_errors": 0
+  },
+  {
+    "model": "accounts/fireworks/models/kimi-k2p6",
+    "mode": "reasoning_effort=none",
+    "n": 20,
+    "correct": 16,
+    "accuracy": 0.8,
+    "total_tokens": 4970,
+    "tokens_per_correct": 310.6,
+    "call_errors": 0
+  },
+  {
+    "model": "accounts/fireworks/models/deepseek-v4-pro",
+    "mode": "default",
+    "n": 20,
+    "correct": 15,
+    "accuracy": 0.75,
+    "total_tokens": 6979,
+    "tokens_per_correct": 465.3,
+    "call_errors": 0
+  },
+  {
+    "model": "accounts/fireworks/models/deepseek-v4-pro",
+    "mode": "reasoning_effort=none",
+    "n": 20,
+    "correct": 16,
+    "accuracy": 0.8,
+    "total_tokens": 4864,
+    "tokens_per_correct": 304.0,
+    "call_errors": 0
+  }
+]

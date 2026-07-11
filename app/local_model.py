@@ -24,6 +24,7 @@ class LocalLM:
                  time.monotonic() - t0, model_path, n_threads, n_ctx)
         self.tok_per_sec = 8.0  # pessimistic default until benchmarked
         self.cutoff_count = 0   # generations cut off by their time budget
+        self.tokens_generated = 0  # streamed chunks ~ completion tokens
 
     def benchmark(self) -> float:
         """Generate ~30 tokens once and measure decode speed."""
@@ -56,6 +57,7 @@ class LocalLM:
             piece = delta.get("content")
             if piece:
                 parts.append(piece)
+                self.tokens_generated += 1
             if time.monotonic() > deadline:
                 self.cutoff_count += 1
                 log.warning("generation cut off at time budget (%.0fs)", time_budget)

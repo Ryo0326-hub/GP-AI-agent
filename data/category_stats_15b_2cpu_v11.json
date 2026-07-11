@@ -1,0 +1,79 @@
+{
+  "tag": "15b_2cpu_v11",
+  "tok_s_devbox": 5.652830293563068,
+  "categories": {
+    "codegen": {
+      "n": 45,
+      "accuracy": 0.556,
+      "verified_correct": 22,
+      "unverified_correct": 3,
+      "p90_completion_tokens": 87,
+      "p90_latency_s": 25.87,
+      "mean_latency_s": 13.62
+    },
+    "debug": {
+      "n": 45,
+      "accuracy": 0.222,
+      "verified_correct": 10,
+      "unverified_correct": 0,
+      "p90_completion_tokens": 69,
+      "p90_latency_s": 21.89,
+      "mean_latency_s": 16.48
+    },
+    "factual": {
+      "n": 44,
+      "accuracy": 1.0,
+      "verified_correct": 44,
+      "unverified_correct": 0,
+      "p90_completion_tokens": 16,
+      "p90_latency_s": 3.1,
+      "mean_latency_s": 2.14
+    },
+    "logic": {
+      "n": 40,
+      "accuracy": 0.95,
+      "verified_correct": 25,
+      "unverified_correct": 13,
+      "p90_completion_tokens": 116,
+      "p90_latency_s": 16.22,
+      "mean_latency_s": 3.34
+    },
+    "math": {
+      "n": 51,
+      "accuracy": 0.059,
+      "verified_correct": 0,
+      "unverified_correct": 3,
+      "p90_completion_tokens": 47,
+      "p90_latency_s": 19.3,
+      "mean_latency_s": 18.34
+    },
+    "ner": {
+      "n": 45,
+      "accuracy": 0.956,
+      "verified_correct": 42,
+      "unverified_correct": 1,
+      "p90_completion_tokens": 26,
+      "p90_latency_s": 4.01,
+      "mean_latency_s": 3.35
+    },
+    "sentiment": {
+      "n": 45,
+      "accuracy": 0.711,
+      "verified_correct": 32,
+      "unverified_correct": 0,
+      "p90_completion_tokens": 33,
+      "p90_latency_s": 4.18,
+      "mean_latency_s": 3.62
+    },
+    "summarization": {
+      "n": 45,
+      "accuracy": 0.8,
+      "verified_correct": 36,
+      "unverified_correct": 0,
+      "p90_completion_tokens": 44,
+      "p90_latency_s": 19.73,
+      "mean_latency_s": 11.21
+    }
+  },
+  "overall_accuracy": 0.642
+}

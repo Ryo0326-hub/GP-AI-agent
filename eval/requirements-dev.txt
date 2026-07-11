@@ -1,0 +1,7 @@
+# Dev/labeling/training environment (make venv). None of this ships at runtime;
+# the image installs its own pinned-by-Dockerfile set.
+requests
+pytest
+llama-cpp-python
+torch
+transformers>=4.40,<5

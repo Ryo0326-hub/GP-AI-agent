@@ -1,17 +1,181 @@
 # GP-AI-Agent — AMD Hackathon Track 1
 
-Submission image: `rkitano/gp-agent:v10-remote`
+GP-AI-Agent is a local-first, token-efficient general-purpose agent. A compact
+learned router predicts whether the bundled Qwen pipeline should answer a task
+locally or send it to an allowlisted Fireworks model. Local inference and local
+routing use zero Fireworks tokens; deterministic checks remain a second safety
+gate before an unverified answer is trusted.
 
-- Published digest: `sha256:b586ef5ac3d8ec71d4ffa463a6d5e16a992c859fb27fcc02a4c0ff2444c52f06`
-- Platform: `linux/amd64`
-- Acceptance rehearsal: 18/19 (94.7%), 49 seconds, 19/19 non-empty answers
+The routing approach is based on the AMD query-router
+[tutorial](https://lablab.ai/ai-tutorials/fine-tune-llm-query-router-amd) and
+[reference repository](https://github.com/Stephen-Kimoi/fine-tune-llm-query-router-amd),
+adapted for this agent's measured local outcomes and the Track 1 container
+constraints.
 
-## Demo application
+## Benchmark status
 
-The Vercel-ready Next.js showcase lives in [`demo/`](demo/). It includes an
-interactive task console, architecture walkthrough, category coverage, and
-benchmark evidence. It works without secrets in labeled simulation mode; add
-the Fireworks variables from `demo/.env.example` to enable live answers.
+The last submitted image, `rkitano/gp-agent:v10-remote`, scored **18/19
+(94.7%)** and used **9,685 Fireworks tokens**. Those numbers describe the
+previous API-first submission, not the new learned-router candidate.
+
+Measured components for the new candidate:
+
+- Qwen2.5-1.5B-Instruct Q4_K_M produced approximately **4.9–5.8 tok/s** in
+  isolated 2-vCPU labeling runs. The 3B model produced approximately **2.2
+  tok/s**, below the runtime's 4 tok/s circuit-breaker, so the Dockerfile now
+  uses the pinned 1.5B model.
+- On the 20-task hard escalation set, DeepSeek V4 Flash with the category
+  system prompt and `reasoning_effort: "none"` scored **19/20 (95%)** using
+  **3,365 tokens**. The same model with the raw prompt scored **17/20 (85%)**
+  using **4,464 tokens**: the category-aware prompt improved accuracy by 10
+  percentage points while reducing tokens by 24.6%.
+
+The escalation measurements are preserved in
+[`data/escalation_prompt_style_report.json`](data/escalation_prompt_style_report.json)
+and [`data/escalation_model_report.json`](data/escalation_model_report.json).
+
+The v11 compact-router profile is revision `compact-80a9ce84c395`: holdout
+accuracy is 77.55%, failure recall is 100%, slow-failure planned recall is
+100%, and unsafe-local count is 0. The arm64 rehearsal answered 19/19 in
+70.5s; the 80-task pass answered all 80 in 207.4s with 45 successful remote
+calls and no fallback failures. The deterministic judge scored 59/60 (98.3%);
+the remaining hosted-judge items require Fireworks network access.
+
+## Architecture
+
+1. **Empirical labels.** `eval/label_local.py` runs the complete local pipeline
+   against the 360-task ground-truthed training set under a 2-vCPU, 18-second
+   local budget. Each example is labeled `local_ok` or `escalate` from the
+   observed answer, verifier result, and expected answer.
+2. **Compact learned router.** `router/train_compact_router.py` fits a
+   deterministic hashed unigram/bigram logistic classifier. Training,
+   calibration, and one-shot test groups are separated by prompt-template
+   similarity. The escalation threshold is calibrated separately, while
+   category policy and completion-cost estimates come only from the training
+   split. No Torch or Transformers runtime is included in the final image.
+3. **Artifact parity.** The trainer writes byte-identical JSON profiles for the
+   Python runtime and browser demo. `make router-artifact-check` fails closed if
+   the profile is pending, labels do not exactly cover `train_data/tasks.json`,
+   the held-out metrics are missing, or the two artifacts differ.
+4. **Budget-aware local plan.** `app/main.py` scores all tasks before loading
+   the GGUF. Planned escalations start concurrently while local tasks are
+   ordered by measured completion cost and admitted against the remaining
+   wall-clock budget.
+5. **Verification safety gate.** Arithmetic is recomputed, generated code is
+   tested in a subprocess, supported logic puzzles are brute-forced, and
+   summary constraints are checked. A failed or untrusted local answer can
+   escalate within the same end-to-end task deadline.
+6. **Category-aware escalation.** Every hosted request includes the same
+   category-specific system instruction used by the local solver. The default
+   build prefers an allowed model whose name contains `deepseek-v4-flash` and
+   sends only the allowlisted extra field `{"reasoning_effort":"none"}`.
+   Model IDs still come exclusively from the runtime `ALLOWED_MODELS` value.
+7. **Graceful degradation.** A broken router falls back to
+   verification-gated local solving. A missing GGUF or local speed below 4
+   tok/s switches to Fireworks when it is available.
+
+The optional `make train-distilbert` target preserves a 66M-parameter research
+comparison with the tutorial. It is not the router shipped by the current
+Dockerfile.
+
+## Reproduce and validate
+
+Prerequisites: Python 3, `uv`, Docker with Buildx, and a Fireworks key for
+hosted-model measurements and end-to-end rehearsals.
+
+```bash
+# One-time local setup and deterministic data
+make venv
+make models-download
+make dataset
+make testset
+
+# Measure the chosen local pipeline under its production budget
+make label-15b
+
+# Fit the shared runtime/browser profile and validate exact label coverage
+make train-router
+make router-artifact-check
+make router-check
+
+# Re-run unit tests before building
+make test
+```
+
+`make train-router` deliberately excludes prompts from `test_input/` and
+`test_input_19/` before splitting the labels. Both build targets depend on the
+artifact check, so a placeholder or stale profile cannot be packaged by
+accident.
+
+For local Fireworks measurements, create a root `.env` that is never committed:
+
+```dotenv
+FIREWORKS_API_KEY=replace_with_your_key
+FIREWORKS_BASE_URL=https://api.fireworks.ai/inference/v1
+ALLOWED_MODELS=accounts/fireworks/models/deepseek-v4-flash,accounts/fireworks/models/another_allowed_model
+```
+
+Then measure the escalation tier and run the candidate under judge-like limits:
+
+```bash
+make pick-model
+make build-dev
+bash eval/run_local.sh gp-agent:v11-dev-arm test_input_19
+python3 eval/judge.py test_input_19
+bash eval/run_local.sh gp-agent:v11-dev-arm test_input --accuracy
+python3 eval/judge.py
+```
+
+Only after those results pass the desired accuracy/token gate, build and push
+the final architecture:
+
+```bash
+make build-push IMAGE=rkitano/gp-agent:v11
+```
+
+The default build is equivalent to:
+
+```text
+HINTS=deepseek-v4-flash,deepseek-v4-pro
+EXTRA_BODY={"reasoning_effort":"none"}
+```
+
+`HINTS` is a name pattern matched against `ALLOWED_MODELS`, not a model ID.
+Unsupported `FIREWORKS_EXTRA_BODY` fields are ignored, and mandatory request
+fields cannot be overridden by that JSON.
+
+## Runtime contract and safeguards
+
+| Track 1 requirement | Implementation |
+|---|---|
+| Read `/input/tasks.json` | `app/main.py` loads an array of `{task_id, prompt}` with retry handling. |
+| Write `/output/results.json` | A valid `[]` is written immediately; non-empty answers are then written incrementally and atomically before final validation. |
+| `linux/amd64`, CPU-only | Build and push targets pin `--platform linux/amd64`; the image uses llama.cpp CPU inference. Final image size is measured after the candidate build. |
+| 4 GB RAM / 2 vCPU | The pinned 1.5B Q4 GGUF and small JSON router avoid the Torch/DistilBERT runtime and concurrent large-model residency. |
+| Startup under 60 seconds | Router scoring and GGUF startup time are reported in stderr as `startup complete in ...`; the final candidate must verify this in rehearsal. |
+| Total runtime under 10 minutes | `TOTAL_DEADLINE_S` defaults to 540 seconds, with a final collection/write reserve. |
+| Requests under 30 seconds | Local and reactive hosted work share the same 25-second per-task clock; hosted requests have a separate hard ceiling below 30 seconds. |
+| Use only allowed hosted models | `app/fireworks.py` chooses exact members of runtime `ALLOWED_MODELS`; unavailable models are removed for the current run. |
+| No cached answers or secrets | Answers are generated per prompt. `.dockerignore` excludes `.env`, datasets, tests, and evaluation artifacts. |
+
+The final `done:` stderr line reports answer-path counts, planned escalations,
+router state, Fireworks attempts/successes, provider-reported tokens, local
+cutoffs, and the category histogram.
+
+Useful runtime controls include `ROUTER_THRESHOLD`, `RESERVE_S`,
+`PREFILL_RATIO`, `TASK_OVERHEAD_S`, `TIGHT_ESCALATION_CAP`,
+`MIN_LOCAL_TOK_S`, and `ESCALATION_TIMEOUT_S`. Raising the learned threshold
+reduces planned escalations but increases the risk of trusting a weak local
+answer; it should be changed only after a new calibration run.
+
+## Live demo
+
+The Vercel-ready walkthrough is in [`demo/`](demo/). It runs the same compact
+JSON router in the browser, streams a paid prompt-router comparison, returns a
+real Fireworks answer in live mode, and displays provider-reported token usage
+and session totals. Until `make train-router` emits a valid profile, its run
+button remains disabled rather than presenting placeholder routing as learned
+behavior.
 
 ```bash
 cd demo
@@ -19,89 +183,13 @@ npm install
 npm run dev
 ```
 
-For Vercel, import this repository and set **Root Directory** to `demo`. The
-framework preset, install command, and build command are detected automatically.
+For Vercel, import this repository and set **Root Directory** to `demo`. See
+[`demo/README.md`](demo/README.md) for environment variables, comparison-token
+semantics, and the required public rate-limit rule.
 
-Token-efficient general-purpose agent. Local-first: a Qwen2.5-3B-Instruct
-Q4_K_M GGUF baked into the image answers everything at **zero Fireworks
-tokens**; deterministic verifiers (arithmetic evaluator, sandboxed code tests,
-logic brute-force, summary-constraint checks) decide when an answer is trusted.
-Only unverified answers escalate to an accuracy-safe model selected from `ALLOWED_MODELS`
-via `FIREWORKS_BASE_URL`.
+## Security note
 
-## Quick start
-
-```bash
-export IMAGE=<dockerhub-user>/gp-agent:latest
-make test                # unit tests (no model needed)
-make build-dev           # native arm64 dev image (:dev-arm) for Apple Silicon iteration
-make build               # linux/amd64 submission image, GGUF downloaded at build time
-make build-remote        # lightweight API-first fallback (no bundled GGUF)
-make testset             # test_input/ (80 tasks) + test_input_19/ (rehearsal) + expected.json
-make check-models        # probe every ALLOWED_MODELS id via your .env (5 tokens each)
-make judge               # deterministic + LLM-judge scoring
-make build-push          # final linux/amd64 buildx --push
-```
-
-Runs (dev):
-
-```bash
-# timing rehearsal: 19 tasks, real deadlines, native arm image
-PLATFORM= bash eval/run_local.sh gp-agent:dev-arm test_input_19
-# accuracy pass: 80 tasks, deadlines lifted (TOTAL_DEADLINE_S=7200, PER_TASK_CAP_S=300)
-bash eval/run_local.sh gp-agent:dev-arm test_input --accuracy
-python3 eval/judge.py                     # scores test_input vs test_output
-python3 eval/judge.py test_input_19       # scores the rehearsal run
-```
-
-`.env` (dev only, never in the image):
-
-```
-FIREWORKS_API_KEY=...
-FIREWORKS_BASE_URL=https://api.fireworks.ai/inference/v1
-ALLOWED_MODELS=accounts/fireworks/models/llama-v3p1-8b-instruct
-```
-
-## Rule-compliance checklist
-
-| Rule | Where satisfied |
-|---|---|
-| Reads `/input/tasks.json` array of `{task_id, prompt}` | `app/main.py` `load_tasks` (with retry) |
-| Writes `/output/results.json` `{task_id, answer}` per task, valid JSON, exit 0 | `app/main.py`: initial `[]` write, incremental `write_partial` (atomic temp+rename in `utils.atomic_write_json`), final validation pass, `sys.exit(0)`; fatal-error handler still writes valid JSON |
-| linux/amd64, ≤10 GB compressed | `Dockerfile` (python:3.11-slim + ~2 GB GGUF ≈ 2.5 GB); `make build/push` pin `--platform linux/amd64` |
-| 4 GB RAM / 2 vCPU, no GPU | 3B Q4_K_M ≈ 2 GB resident; `llama-cpp-python` CPU build, `n_threads=2` (`app/local_model.py`) |
-| Container ready < 60 s | Model load is the only startup cost (seconds from local disk); benchmark is ~30 tokens |
-| Total runtime < 10 min | 9-min internal deadline (`TOTAL_DEADLINE_S=540`); behind-pace ⇒ concurrent bulk escalation (`bulk_escalate`) |
-| < 30 s per task | `PER_TASK_CAP_S=25` end-to-end; `LOCAL_SOLVE_CAP_S=18` reserves time for escalation, and Fireworks retries share the remaining deadline |
-| English answers | English prompts/templates throughout (`app/prompts.py`) |
-| `FIREWORKS_API_KEY` / `FIREWORKS_BASE_URL` only, from env | `app/fireworks.py` reads env at runtime; single call path `BASE_URL + /chat/completions` |
-| Only `ALLOWED_MODELS` | `Fireworks._pick_model` selects from the env list only (prefers direct-answer GPT-OSS when present, then compact models, fallback to first) |
-| No hardcoded/cached answers | Nothing keyed on prompt text; classifier routes by surface form only, all answers generated |
-| No secrets in image | `.dockerignore` excludes `.env`, `eval/`, `tests/` |
-
-## Tuning knobs (accuracy ↔ tokens)
-
-- **Model choice** (`--build-arg MODEL_URL=...`): 3B = better accuracy, ~2× slower;
-  1.5B if the startup benchmark shows < ~6 tok/s on the judging VM.
-- **`MAX_TOKENS` / `ESCALATION_MAX_TOKENS`** (`app/prompts.py`): lower = faster +
-  cheaper escalations, but risks truncated answers the judge marks wrong.
-- **`ESCALATE_UNVERIFIED_LOGIC`** (env, default `1`): `0` trusts local logic answers
-  that end in `Answer:` — saves tokens, risks the accuracy gate.
-- **Verifier strictness**: `looks_confident` min length, NER line regex, summary
-  constraint parsing (`app/verify.py`) — stricter = more escalations = more tokens.
-- **`PER_TASK_MIN_S` / `TOTAL_DEADLINE_S` / `PER_TASK_CAP_S` / `LOCAL_SOLVE_CAP_S`** (env, `app/main.py`):
-  the pacer never gives a task less than `PER_TASK_MIN_S` (default 20 s) — if the
-  floor × remaining tasks won't fit the deadline, it bulk-escalates instead of
-  truncating every answer. Deadlines are env-overridable for dev accuracy runs.
-- **`MIN_LOCAL_TOK_S`** (env, default `4`): startup benchmark circuit breaker;
-  slower CPUs route directly to Fireworks so decode latency cannot cause fallbacks.
-
-The `done:` stderr line reports truthful diagnostics: per-path counts
-(local-verified / local-unverified / escalated / fallback), Fireworks calls
-attempted vs succeeded, total tokens, generation cutoffs, and the category
-histogram over **all** tasks. Escalation errors log the HTTP response body;
-404s are non-retryable, mark the model known-bad for the run, and fall back to
-the next-smallest allowed model.
-
-Note: Qwen2.5-3B-Instruct is under the Qwen Research License; 1.5B/7B are
-Apache-2.0. Swap the `MODEL_URL` build arg if licensing matters for your entry.
+Never commit either the root `.env` or `demo/.env*` credential files. If a real
+Fireworks key was ever pushed in an earlier revision, revoke and rotate it;
+replacing the current file does not invalidate a key that remains in Git
+history. Never expose the replacement as a `NEXT_PUBLIC_` variable.

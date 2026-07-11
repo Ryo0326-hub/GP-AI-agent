@@ -28,6 +28,7 @@ def test_ner():
 
 def test_debug():
     assert classify("This function should return the max of a list but has a bug: def get_max(nums): return nums[0]. Find and fix it.") == "debug"
+    assert classify("THIS HAS A BUG: DEF GET_MAX(NUMS): RETURN NUMS[0]") == "debug"
 
 
 def test_codegen():

@@ -41,6 +41,13 @@ accuracy is 77.55%, failure recall is 100%, slow-failure planned recall is
 calls and no fallback failures. The deterministic judge scored 59/60 (98.3%);
 the remaining hosted-judge items require Fireworks network access.
 
+The optimized candidate is published as
+[`rkitano/gp-agent:v11`](https://hub.docker.com/r/rkitano/gp-agent/tags?name=v11)
+(`linux/amd64`, digest
+`sha256:2020082323bbc2c1d22d641d14bb66760d2acd1a2927f4c71333454df9d46a69`).
+The walkthrough is live at <https://gp-ai-agent-1.vercel.app/> and displays the
+previous baseline beside the v11 projected accuracy and expected token spend.
+
 ## Architecture
 
 1. **Empirical labels.** `eval/label_local.py` runs the complete local pipeline
@@ -126,8 +133,7 @@ bash eval/run_local.sh gp-agent:v11-dev-arm test_input --accuracy
 python3 eval/judge.py
 ```
 
-Only after those results pass the desired accuracy/token gate, build and push
-the final architecture:
+After the validation gates pass, build and push the final architecture:
 
 ```bash
 make build-push IMAGE=rkitano/gp-agent:v11
@@ -140,6 +146,13 @@ HINTS=deepseek-v4-flash,deepseek-v4-pro
 EXTRA_BODY={"reasoning_effort":"none"}
 ```
 
+The submission image targets amd64. On an ARM64 development machine, pull it
+with explicit emulation; the hackathon evaluator can pull the tag normally:
+
+```bash
+docker pull --platform linux/amd64 rkitano/gp-agent:v11
+```
+
 `HINTS` is a name pattern matched against `ALLOWED_MODELS`, not a model ID.
 Unsupported `FIREWORKS_EXTRA_BODY` fields are ignored, and mandatory request
 fields cannot be overridden by that JSON.
@@ -150,9 +163,9 @@ fields cannot be overridden by that JSON.
 |---|---|
 | Read `/input/tasks.json` | `app/main.py` loads an array of `{task_id, prompt}` with retry handling. |
 | Write `/output/results.json` | A valid `[]` is written immediately; non-empty answers are then written incrementally and atomically before final validation. |
-| `linux/amd64`, CPU-only | Build and push targets pin `--platform linux/amd64`; the image uses llama.cpp CPU inference. Final image size is measured after the candidate build. |
+| `linux/amd64`, CPU-only | Build and push targets pin `--platform linux/amd64`; the published v11 image uses llama.cpp CPU inference. |
 | 4 GB RAM / 2 vCPU | The pinned 1.5B Q4 GGUF and small JSON router avoid the Torch/DistilBERT runtime and concurrent large-model residency. |
-| Startup under 60 seconds | Router scoring and GGUF startup time are reported in stderr as `startup complete in ...`; the final candidate must verify this in rehearsal. |
+| Startup under 60 seconds | Router scoring and GGUF startup time are reported in stderr as `startup complete in ...`; v11 started in 5.9s in the 80-task rehearsal. |
 | Total runtime under 10 minutes | `TOTAL_DEADLINE_S` defaults to 540 seconds, with a final collection/write reserve. |
 | Requests under 30 seconds | Local and reactive hosted work share the same 25-second per-task clock; hosted requests have a separate hard ceiling below 30 seconds. |
 | Use only allowed hosted models | `app/fireworks.py` chooses exact members of runtime `ALLOWED_MODELS`; unavailable models are removed for the current run. |

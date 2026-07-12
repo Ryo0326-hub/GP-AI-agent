@@ -1,0 +1,5 @@
+Using a strong model for every prompt can be costly and slow. A short factual question may take the same paid path as a complex programming request, even though the two tasks have very different needs.
+
+This is especially important in Track 1 because the agent has real limits: 4 gigabytes of memory, 2 CPU cores, and less than 10 minutes to complete the full task set.
+
+My challenge was to build an agent that works within those limits without sacrificing reliability.

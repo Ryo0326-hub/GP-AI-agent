@@ -1,0 +1,5 @@
+GP-AI-Agent shows that a practical AI agent can be efficient and dependable at the same time.
+
+The local model handles work when it is safe. The stronger hosted model is still available when the task requires it. That makes the system faster, more budget-aware, and safer than sending every prompt through one expensive route.
+
+The live walkthrough shows the local routing decision, the prompt-based baseline, the final answer, and the token comparison. Thank you for your time.

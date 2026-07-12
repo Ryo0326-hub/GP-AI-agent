@@ -1,0 +1,122 @@
+{"kind":"deck","id":"pr/7l0k77","name":"Deck"}
+{"kind":"layout","layoutId":"f5edafd0-f5bf-422b-a4d9-2a3164eda56e","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"9c58a934-f4a8-446b-9e53-916d9ece1f5d","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/dgcf27","slide":1,"title":"AMD DEVELOPER HACKATHON  |  TRACK 1","textShapes":14}
+{"kind":"textbox","id":"sh/vy90je9c","slide":1,"text":"AMD DEVELOPER HACKATHON  |  TRACK 1","textPreview":"AMD DEVELOPER HACKATHON  |  TRACK 1","textChars":35,"textLines":1,"bbox":[54,42,700,22]}
+{"kind":"textbox","id":"sh/oj2t83it","slide":1,"text":"GP-AI-Agent","textPreview":"GP-AI-Agent","textChars":11,"textLines":1,"bbox":[54,126,820,84]}
+{"kind":"textbox","id":"sh/d4vmtwra","slide":1,"text":"A local-first AI agent that spends tokens only when a stronger model is needed.","textPreview":"A local-first AI agent that spends tokens only when a stronger model is needed.","textChars":79,"textLines":1,"bbox":[58,230,720,82]}
+{"kind":"shape","id":"sh/61032lsz","slide":1,"bbox":[58,366,535,166]}
+{"kind":"textbox","id":"sh/vmtwra5g","slide":1,"text":"THE IDEA","textPreview":"THE IDEA","textChars":8,"textLines":1,"bbox":[84,394,200,22]}
+{"kind":"textbox","id":"sh/o7qpg3ex","slide":1,"text":"Route locally.\n+Escalate safely.","textPreview":"Route locally. | +Escalate safely.","textChars":32,"textLines":2,"bbox":[84,433,380,70]}
+{"kind":"shape","id":"sh/dsji5sne","slide":1,"bbox":[816,142,315,86]}
+{"kind":"textbox","id":"sh/6tovahoz","slide":1,"text":"Task arrives","textPreview":"Task arrives","textChars":12,"textLines":1,"bbox":[848,171,250,30]}
+{"kind":"textbox","id":"sh/vahoza1g","slide":1,"text":"↓","textPreview":"↓","textChars":1,"textLines":1,"bbox":[944,243,50,46]}
+{"kind":"shape","id":"sh/7qpg3ex0","slide":1,"bbox":[816,303,315,86]}
+{"kind":"textbox","id":"sh/i5sneloj","slide":1,"text":"Learned router","textPreview":"Learned router","textChars":14,"textLines":1,"bbox":[848,332,250,30]}
+{"kind":"textbox","id":"sh/pwb2hwfy","slide":1,"text":"LOCAL","textPreview":"LOCAL","textChars":5,"textLines":1,"bbox":[735,420,150,22]}
+{"kind":"textbox","id":"sh/0bi9s36h","slide":1,"text":"REMOTE","textPreview":"REMOTE","textChars":6,"textLines":1,"bbox":[1055,420,150,22]}
+{"kind":"shape","id":"sh/7y1kre1w","slide":1,"bbox":[720,475,185,80]}
+{"kind":"shape","id":"sh/ed8v6psf","slide":1,"bbox":[1040,475,185,80]}
+{"kind":"textbox","id":"sh/p4r65wju","slide":1,"text":"Local Qwen","textPreview":"Local Qwen","textChars":10,"textLines":1,"bbox":[736,501,150,26]}
+{"kind":"textbox","id":"sh/wjudg7ad","slide":1,"text":"Fireworks","textPreview":"Fireworks","textChars":9,"textLines":1,"bbox":[1054,501,150,26]}
+{"kind":"textbox","id":"sh/72x4nap4","slide":1,"text":"GP-AI-AGENT  /  AMD HACKATHON TRACK 1","textPreview":"GP-AI-AGENT  /  AMD HACKATHON TRACK 1","textChars":37,"textLines":1,"bbox":[54,680,500,18]}
+{"kind":"textbox","id":"sh/ih4byhgn","slide":1,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[1190,680,36,18]}
+{"kind":"notes","id":"nt/dgcf27","slide":1,"text":""}
+{"kind":"slide","id":"sl/rucxpi","slide":2,"title":"THE PROBLEM","textShapes":13}
+{"kind":"textbox","id":"sh/9s36hcrm","slide":2,"text":"THE PROBLEM","textPreview":"THE PROBLEM","textChars":11,"textLines":1,"bbox":[54,42,700,22]}
+{"kind":"textbox","id":"sh/y1kre1w7","slide":2,"text":"Strong models are valuable - but using them for every task is wasteful.","textPreview":"Strong models are valuable - but using them for every task is wasteful.","textChars":71,"textLines":1,"bbox":[54,80,1160,112]}
+{"kind":"shape","id":"sh/rmhk3q5o","slide":2,"bbox":[64,245,46,46]}
+{"kind":"textbox","id":"sh/gfmlkjm1","slide":2,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[64,253,46,28]}
+{"kind":"textbox","id":"sh/90je9cvi","slide":2,"text":"Cost grows with every prompt","textPreview":"Cost grows with every prompt","textChars":28,"textLines":1,"bbox":[130,246,459,32]}
+{"kind":"textbox","id":"sh/yd0z6103","slide":2,"text":"A simple question can trigger the same external-model path as a difficult coding task.","textPreview":"A simple question can trigger the same external-model path as a difficult coding task.","textChars":86,"textLines":1,"bbox":[130,282,459,66]}
+{"kind":"shape","id":"sh/rytsvu9k","slide":2,"bbox":[64,395,46,46]}
+{"kind":"textbox","id":"sh/gr2p8nqx","slide":2,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[64,403,46,28]}
+{"kind":"textbox","id":"sh/9cvixcze","slide":2,"text":"Latency is unnecessary for safe tasks","textPreview":"Latency is unnecessary for safe tasks","textChars":37,"textLines":1,"bbox":[130,396,459,32]}
+{"kind":"textbox","id":"sh/tovahoza","slide":2,"text":"Some tasks can be solved locally and verified deterministically in the container.","textPreview":"Some tasks can be solved locally and verified deterministically in the container.","textChars":81,"textLines":1,"bbox":[130,432,459,66]}
+{"kind":"shape","id":"sh/032lszqt","slide":2,"bbox":[690,244,500,302]}
+{"kind":"textbox","id":"sh/bi9s36hc","slide":2,"text":"TRACK 1 CONSTRAINTS","textPreview":"TRACK 1 CONSTRAINTS","textChars":19,"textLines":1,"bbox":[724,278,380,24]}
+{"kind":"textbox","id":"sh/ixczed8v","slide":2,"text":"4 GB RAM\n2 vCPU\n< 10 min total runtime","textPreview":"4 GB RAM | 2 vCPU | < 10 min total runtime","textChars":38,"textLines":3,"bbox":[724,326,380,118]}
+{"kind":"textbox","id":"sh/p0bi9s36","slide":2,"text":"The agent must use a small local model, a disciplined budget, and a reliable fallback.","textPreview":"The agent must use a small local model, a disciplined budget, and a reliable fallback.","textChars":86,"textLines":1,"bbox":[724,468,400,54]}
+{"kind":"textbox","id":"sh/0fepkzup","slide":2,"text":"GP-AI-AGENT  /  AMD HACKATHON TRACK 1","textPreview":"GP-AI-AGENT  /  AMD HACKATHON TRACK 1","textChars":37,"textLines":1,"bbox":[54,680,500,18]}
+{"kind":"textbox","id":"sh/bulwval8","slide":2,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[1190,680,36,18]}
+{"kind":"notes","id":"nt/rucxpi","slide":2,"text":""}
+{"kind":"slide","id":"sl/bgcsjk","slide":3,"title":"THE SOLUTION","textShapes":20}
+{"kind":"textbox","id":"sh/s72x4nap","slide":3,"text":"THE SOLUTION","textPreview":"THE SOLUTION","textChars":12,"textLines":1,"bbox":[54,42,700,22]}
+{"kind":"textbox","id":"sh/3m94fu18","slide":3,"text":"GP-AI-Agent learns when the local path is trustworthy.","textPreview":"GP-AI-Agent learns when the local path is trustworthy.","textChars":54,"textLines":1,"bbox":[54,80,1160,112]}
+{"kind":"textbox","id":"sh/a5gbq1or","slide":3,"text":"The router makes a free decision in the browser and container before any hosted API call.","textPreview":"The router makes a free decision in the browser and container before any hosted API call.","textChars":89,"textLines":1,"bbox":[58,194,850,40]}
+{"kind":"shape","id":"sh/h4byhgn2","slide":3,"bbox":[74,310,230,210]}
+{"kind":"textbox","id":"sh/sji5snel","slide":3,"text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[96,334,34,28]}
+{"kind":"textbox","id":"sh/3ylc7u54","slide":3,"text":"Classify","textPreview":"Classify","textChars":8,"textLines":1,"bbox":[96,379,180,32]}
+{"kind":"textbox","id":"sh/adsji5sn","slide":3,"text":"Prompt category and compact features","textPreview":"Prompt category and compact features","textChars":36,"textLines":1,"bbox":[96,427,185,54]}
+{"kind":"shape","id":"sh/hgn29gr2","slide":3,"bbox":[348,310,230,210]}
+{"kind":"textbox","id":"sh/svu9knih","slide":3,"text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[370,334,34,28]}
+{"kind":"textbox","id":"sh/ed8bat47","slide":3,"text":"Predict","textPreview":"Predict","textChars":7,"textLines":1,"bbox":[370,379,180,32]}
+{"kind":"textbox","id":"sh/7u54zido","slide":3,"text":"Probability that local work should escalate","textPreview":"Probability that local work should escalate","textChars":43,"textLines":1,"bbox":[370,427,185,54]}
+{"kind":"shape","id":"sh/wfyxobm5","slide":3,"bbox":[622,310,230,210]}
+{"kind":"textbox","id":"sh/l0rqd4vm","slide":3,"text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[644,334,34,28]}
+{"kind":"textbox","id":"sh/eloj2t83","slide":3,"text":"Verify","textPreview":"Verify","textChars":6,"textLines":1,"bbox":[644,379,180,32]}
+{"kind":"textbox","id":"sh/36hcrmhk","slide":3,"text":"Trust local output only after checks pass","textPreview":"Trust local output only after checks pass","textChars":41,"textLines":1,"bbox":[644,427,185,54]}
+{"kind":"shape","id":"sh/wra5gbq1","slide":3,"bbox":[896,310,230,210]}
+{"kind":"textbox","id":"sh/lc7u54zi","slide":3,"text":"4","textPreview":"4","textChars":1,"textLines":1,"bbox":[918,334,34,28]}
+{"kind":"textbox","id":"sh/epkzupwb","slide":3,"text":"Escalate","textPreview":"Escalate","textChars":8,"textLines":1,"bbox":[918,379,180,32]}
+{"kind":"textbox","id":"sh/7adsji5s","slide":3,"text":"Use Fireworks only when needed","textPreview":"Use Fireworks only when needed","textChars":30,"textLines":1,"bbox":[918,427,185,54]}
+{"kind":"textbox","id":"sh/z61032ls","slide":3,"text":"→","textPreview":"→","textChars":1,"textLines":1,"bbox":[304,389,44,32]}
+{"kind":"textbox","id":"sh/al87ed8b","slide":3,"text":"→","textPreview":"→","textChars":1,"textLines":1,"bbox":[578,389,44,32]}
+{"kind":"textbox","id":"sh/hcrmhk3q","slide":3,"text":"→","textPreview":"→","textChars":1,"textLines":1,"bbox":[852,389,44,32]}
+{"kind":"textbox","id":"sh/orytsvu9","slide":3,"text":"GP-AI-AGENT  /  AMD HACKATHON TRACK 1","textPreview":"GP-AI-AGENT  /  AMD HACKATHON TRACK 1","textChars":37,"textLines":1,"bbox":[54,680,500,18]}
+{"kind":"textbox","id":"sh/zupwb2hw","slide":3,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[1190,680,36,18]}
+{"kind":"notes","id":"nt/bgcsjk","slide":3,"text":""}
+{"kind":"slide","id":"sl/fvixx8","slide":4,"title":"TECHNICAL ARCHITECTURE","textShapes":14}
+{"kind":"textbox","id":"sh/hgn29gr2","slide":4,"text":"TECHNICAL ARCHITECTURE","textPreview":"TECHNICAL ARCHITECTURE","textChars":22,"textLines":1,"bbox":[54,42,700,22]}
+{"kind":"textbox","id":"sh/ap4r65wj","slide":4,"text":"A compact router, a local solver, and a safety gate work as one system.","textPreview":"A compact router, a local solver, and a safety gate work as one system.","textChars":71,"textLines":1,"bbox":[54,80,1160,112]}
+{"kind":"shape","id":"sh/za1gvy90","slide":4,"bbox":[56,220,353,335]}
+{"kind":"textbox","id":"sh/s36hcrmh","slide":4,"text":"01  LEARNED ROUTER","textPreview":"01  LEARNED ROUTER","textChars":18,"textLines":1,"bbox":[84,253,270,24]}
+{"kind":"textbox","id":"sh/hoza1gvy","slide":4,"text":"Hashed unigram + bigram\nlogistic classifier","textPreview":"Hashed unigram + bigram | logistic classifier","textChars":43,"textLines":2,"bbox":[84,301,270,78]}
+{"kind":"textbox","id":"sh/a1gvy90j","slide":4,"text":"Trained from 360 measured local outcomes.\nCalibrated threshold plus category policy.","textPreview":"Trained from 360 measured local outcomes. | Calibrated threshold plus category policy.","textChars":84,"textLines":2,"bbox":[84,406,278,54]}
+{"kind":"shape","id":"sh/zidonyd0","slide":4,"bbox":[464,220,353,335]}
+{"kind":"textbox","id":"sh/s72x4nap","slide":4,"text":"02  LOCAL SOLVER","textPreview":"02  LOCAL SOLVER","textChars":16,"textLines":1,"bbox":[492,253,270,24]}
+{"kind":"textbox","id":"sh/lszqtcj6","slide":4,"text":"Qwen 2.5 1.5B\nQ4_K_M via llama.cpp","textPreview":"Qwen 2.5 1.5B | Q4_K_M via llama.cpp","textChars":34,"textLines":2,"bbox":[492,301,270,78]}
+{"kind":"textbox","id":"sh/h0fepkzu","slide":4,"text":"CPU-only inference sized for the 4 GB / 2 vCPU environment.","textPreview":"CPU-only inference sized for the 4 GB / 2 vCPU environment.","textChars":59,"textLines":1,"bbox":[492,406,278,54]}
+{"kind":"shape","id":"sh/sfil0rqd","slide":4,"bbox":[872,220,353,335]}
+{"kind":"textbox","id":"sh/zupwb2hw","slide":4,"text":"03  SAFETY + FALLBACK","textPreview":"03  SAFETY + FALLBACK","textChars":21,"textLines":1,"bbox":[900,253,270,24]}
+{"kind":"textbox","id":"sh/a9w3m94f","slide":4,"text":"Verify locally.\nEscalate when needed.","textPreview":"Verify locally. | Escalate when needed.","textChars":37,"textLines":2,"bbox":[900,301,270,78]}
+{"kind":"textbox","id":"sh/hcrmhk3q","slide":4,"text":"Arithmetic, code, logic, and format checks protect the final answer.","textPreview":"Arithmetic, code, logic, and format checks protect the final answer.","textChars":68,"textLines":1,"bbox":[900,406,278,54]}
+{"kind":"textbox","id":"sh/orytsvu9","slide":4,"text":"Local answers use zero Fireworks routing tokens.","textPreview":"Local answers use zero Fireworks routing tokens.","textChars":48,"textLines":1,"bbox":[58,592,720,32]}
+{"kind":"textbox","id":"sh/z61032ls","slide":4,"text":"GP-AI-AGENT  /  AMD HACKATHON TRACK 1","textPreview":"GP-AI-AGENT  /  AMD HACKATHON TRACK 1","textChars":37,"textLines":1,"bbox":[54,680,500,18]}
+{"kind":"textbox","id":"sh/al87ed8b","slide":4,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[1190,680,36,18]}
+{"kind":"notes","id":"nt/fvixx8","slide":4,"text":""}
+{"kind":"slide","id":"sl/2vpbxl","slide":5,"title":"MEASURED RESULTS","textShapes":15}
+{"kind":"textbox","id":"sh/cbulwval","slide":5,"text":"MEASURED RESULTS","textPreview":"MEASURED RESULTS","textChars":16,"textLines":1,"bbox":[54,42,700,22]}
+{"kind":"textbox","id":"sh/nqxs72x4","slide":5,"text":"The optimized policy cuts expected API tokens while protecting reliability.","textPreview":"The optimized policy cuts expected API tokens while protecting reliability.","textChars":75,"textLines":1,"bbox":[54,80,1160,112]}
+{"kind":"shape","id":"sh/u54zidon","slide":5,"bbox":[58,224,255,154]}
+{"kind":"textbox","id":"sh/5kb6xkf6","slide":5,"text":"9,685","textPreview":"9,685","textChars":5,"textLines":1,"bbox":[80,250,211,54]}
+{"kind":"textbox","id":"sh/czed8v6p","slide":5,"text":"previous API tokens","textPreview":"previous API tokens","textChars":19,"textLines":1,"bbox":[80,322,211,30]}
+{"kind":"shape","id":"sh/neloj2t8","slide":5,"bbox":[339,224,255,154]}
+{"kind":"textbox","id":"sh/ytsvu9kn","slide":5,"text":"1,824","textPreview":"1,824","textChars":5,"textLines":1,"bbox":[361,250,211,54]}
+{"kind":"textbox","id":"sh/58z25kb6","slide":5,"text":"v11 expected API tokens","textPreview":"v11 expected API tokens","textChars":23,"textLines":1,"bbox":[361,322,211,30]}
+{"kind":"shape","id":"sh/gn29gr2p","slide":5,"bbox":[620,224,255,154]}
+{"kind":"textbox","id":"sh/u54zidon","slide":5,"text":"97.14%","textPreview":"97.14%","textChars":6,"textLines":1,"bbox":[642,250,211,54]}
+{"kind":"textbox","id":"sh/nqxs72x4","slide":5,"text":"v11 projected accuracy","textPreview":"v11 projected accuracy","textChars":22,"textLines":1,"bbox":[642,322,211,30]}
+{"kind":"shape","id":"sh/cbulwval","slide":5,"bbox":[901,224,325,154]}
+{"kind":"textbox","id":"sh/5sneloj2","slide":5,"text":"19 / 19","textPreview":"19 / 19","textChars":7,"textLines":1,"bbox":[923,250,281,54]}
+{"kind":"textbox","id":"sh/ytsvu9kn","slide":5,"text":"rehearsal answers completed","textPreview":"rehearsal answers completed","textChars":27,"textLines":1,"bbox":[923,322,281,30]}
+{"kind":"shape","id":"sh/neloj2t8","slide":5,"bbox":[58,426,1168,134]}
+{"kind":"textbox","id":"sh/czed8v6p","slide":5,"text":"Validation evidence","textPreview":"Validation evidence","textChars":19,"textLines":1,"bbox":[86,455,230,24]}
+{"kind":"textbox","id":"sh/5kb6xkf6","slide":5,"text":"80 tasks answered in 207.4 seconds  •  45 remote calls succeeded  •  0 fallbacks  •  130 / 130 tests passing","textPreview":"80 tasks answered in 207.4 seconds  •  45 remote calls succeeded  •  0 fallbacks  •  130 / 130 tests passing","textChars":108,"textLines":1,"bbox":[86,500,1080,34]}
+{"kind":"textbox","id":"sh/yhgn29gr","slide":5,"text":"Projected accuracy and token estimates come from the held-out router profile; rehearsal figures are measured end-to-end.","textPreview":"Projected accuracy and token estimates come from the held-out router profile; rehearsal figures are measured end-to-end.","textChars":120,"textLines":1,"bbox":[86,574,1080,26]}
+{"kind":"textbox","id":"sh/n29gr2p8","slide":5,"text":"GP-AI-AGENT  /  AMD HACKATHON TRACK 1","textPreview":"GP-AI-AGENT  /  AMD HACKATHON TRACK 1","textChars":37,"textLines":1,"bbox":[54,680,500,18]}
+{"kind":"textbox","id":"sh/fyxobm58","slide":5,"text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[1190,680,36,18]}
+{"kind":"notes","id":"nt/2vpbxl","slide":5,"text":""}
+{"kind":"slide","id":"sl/xkg710","slide":6,"title":"WHY IT MATTERS","textShapes":9}
+{"kind":"textbox","id":"sh/8jqh0fep","slide":6,"text":"WHY IT MATTERS","textPreview":"WHY IT MATTERS","textChars":14,"textLines":1,"bbox":[54,42,700,22]}
+{"kind":"textbox","id":"sh/fyxobm58","slide":6,"text":"The result is a practical agent that is\nfast, budget-aware, and safe by design.","textPreview":"The result is a practical agent that is | fast, budget-aware, and safe by design.","textChars":79,"textLines":2,"bbox":[58,112,1020,126]}
+{"kind":"shape","id":"sh/qd4vmtwr","slide":6,"bbox":[58,300,760,182]}
+{"kind":"textbox","id":"sh/xczed8v6","slide":6,"text":"LOCAL-FIRST DOES NOT MEAN LOCAL-ONLY","textPreview":"LOCAL-FIRST DOES NOT MEAN LOCAL-ONLY","textChars":36,"textLines":1,"bbox":[88,331,500,24]}
+{"kind":"textbox","id":"sh/8v6psfil","slide":6,"text":"It means every task gets the cheapest reliable path - with a stronger model ready when the task deserves it.","textPreview":"It means every task gets the cheapest reliable path - with a stronger model ready when the task deserves it.","textChars":108,"textLines":1,"bbox":[88,379,664,60]}
+{"kind":"shape","id":"sh/fa9w3m94","slide":6,"bbox":[884,300,342,182]}
+{"kind":"textbox","id":"sh/qpg3ex0n","slide":6,"text":"LIVE DEMO","textPreview":"LIVE DEMO","textChars":9,"textLines":1,"bbox":[912,332,260,24]}
+{"kind":"textbox","id":"sh/1gvy90je","slide":6,"text":"gp-ai-agent-1\n.vercel.app","textPreview":"gp-ai-agent-1 | .vercel.app","textChars":25,"textLines":2,"bbox":[912,381,260,62]}
+{"kind":"textbox","id":"sh/8z25kb6x","slide":6,"text":"Route locally. Spend only when needed.","textPreview":"Route locally. Spend only when needed.","textChars":38,"textLines":1,"bbox":[58,576,1000,40]}
+{"kind":"textbox","id":"sh/a9w3m94f","slide":6,"text":"GP-AI-AGENT  /  AMD HACKATHON TRACK 1","textPreview":"GP-AI-AGENT  /  AMD HACKATHON TRACK 1","textChars":37,"textLines":1,"bbox":[54,680,500,18]}
+{"kind":"textbox","id":"sh/zupwb2hw","slide":6,"text":"06","textPreview":"06","textChars":2,"textLines":1,"bbox":[1190,680,36,18]}
+{"kind":"notes","id":"nt/xkg710","slide":6,"text":""}

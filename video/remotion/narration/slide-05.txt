@@ -1,0 +1,5 @@
+The earlier API-first approach used 9,685 API tokens. The new v11 learned-router profile estimates 1,824 API tokens for the comparable task mix, while projecting 97.14 percent accuracy.
+
+I also tested the real end-to-end system. The 19-task rehearsal completed all 19 tasks in 70.5 seconds. The 80-task pass answered every task in 207.4 seconds, with 45 successful remote calls and no fallbacks. The project also has 130 passing automated tests.
+
+The key point is that I am not claiming that all tasks should be local. I am using data and verification to choose the right path for each task.

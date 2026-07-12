@@ -1,0 +1,5 @@
+GP-AI-Agent solves this with a learned router. Before calling any external model, the router looks at the prompt and makes a small, local prediction.
+
+First, it classifies the task. Next, it estimates whether the local path is likely to need escalation. Then the agent verifies local work whenever possible. Finally, it calls Fireworks only for tasks that need a stronger model.
+
+This routing decision is local, fast, and uses zero Fireworks tokens.

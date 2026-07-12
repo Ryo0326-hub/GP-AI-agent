@@ -1,0 +1,5 @@
+Technically, the router is a compact logistic classifier using hashed word and word-pair features. It was trained from 360 measured outcomes from the local pipeline, rather than from generic examples.
+
+For local generation, I use Qwen 2.5 1.5B in a compressed Q4 format through llama.cpp. This is small enough to fit the required CPU-only environment.
+
+The important safety layer is verification. The agent can recompute arithmetic, run code tests, check some logic problems, and validate output format. If the local result is not trustworthy, the system escalates instead of guessing.

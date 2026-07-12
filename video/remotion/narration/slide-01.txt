@@ -1,0 +1,5 @@
+Hello, I am presenting GP-AI-Agent, my project for the AMD Developer Hackathon Track 1.
+
+The idea is simple: not every AI task needs an expensive cloud model. GP-AI-Agent first decides whether a task can be answered safely on the local machine. If it can, it answers locally. If the task is difficult or the local answer does not pass safety checks, it escalates to a stronger Fireworks model.
+
+So the project is local-first, but not local-only. The goal is to spend tokens only when they create real value.

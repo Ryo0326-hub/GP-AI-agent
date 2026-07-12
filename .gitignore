@@ -35,4 +35,9 @@ demo/node_modules/
 demo/.next/
 demo/.vercel/
 demo/.env.local
+video/remotion/node_modules/
+video/remotion/.remotion/
+video/remotion/public/audio/*.aiff
+video/remotion/public/audio/*.wav
+output/video/*.mp4
 .DS_Store

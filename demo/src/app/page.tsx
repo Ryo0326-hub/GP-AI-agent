@@ -334,8 +334,10 @@ export default function Home() {
         <div className="hero-actions"><a className="button primary" href="#lab">Run the walkthrough <span>→</span></a><a className="button ghost" href="#architecture">See the system</a></div>
         <div className="metrics">
           <div><strong>18/19</strong><span>previous accuracy</span></div>
+          <div><strong>97.14%</strong><span>v11 projected accuracy</span></div>
           <div><strong>9,685</strong><span>previous API tokens</span></div>
-          <div><strong>0</strong><span>learned routing tokens</span></div>
+          <div><strong>1,824</strong><span>v11 expected API tokens</span></div>
+          <div><strong>0</strong><span>v11 routing tokens</span></div>
           <div><strong>130/130</strong><span>tests passing</span></div>
         </div>
       </section>

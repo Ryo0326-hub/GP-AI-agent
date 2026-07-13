@@ -39,6 +39,14 @@ def _preferred_hints():
     return [h.strip().lower() for h in raw.split(",") if h.strip()]
 
 
+def _retry_hints():
+    """Name patterns for the verification-retry tier (a different, usually
+    stronger allowed model that re-attempts an answer that failed the
+    deterministic checks)."""
+    raw = os.environ.get("RETRY_MODEL_HINTS") or ""
+    return [h.strip().lower() for h in raw.split(",") if h.strip()]
+
+
 def _extra_body():
     """Optional extra request params (e.g. reasoning controls) baked from the
     escalation-model eval. Malformed or unsupported fields are ignored."""
@@ -104,6 +112,29 @@ class Fireworks:
                     return m
         return candidates[0]
 
+    def pick_distinct(self, exclude, hints):
+        """First usable allowed model not in ``exclude``, preferring the given
+        name patterns, then larger-looking siblings."""
+        with self._lock:
+            candidates = [m for m in self.allowed
+                          if m not in self.bad_models and m not in exclude]
+        if not candidates:
+            return None
+        for hint in list(hints) + ["pro", "k2", "large", "70b", "405b"]:
+            for m in candidates:
+                if hint in m.lower():
+                    return m
+        return candidates[0]
+
+    def secondary_model(self):
+        """A different allowed model for one verification-driven retry.
+
+        RETRY_MODEL_HINTS patterns win; otherwise prefer a larger-looking
+        sibling. Returns None when no distinct usable model exists, in which
+        case the caller skips the retry (temperature-0 replays are pointless).
+        """
+        return self.pick_distinct({self.model}, _retry_hints())
+
     def _mark_bad(self, model):
         with self._lock:
             self.bad_models.add(model)
@@ -114,11 +145,14 @@ class Fireworks:
             log.error("model %s marked unusable; no allowed models left", model)
 
     def complete(self, prompt: str, max_tokens: int, timeout: float = 25.0,
-                 system: str = None) -> str:
+                 system: str = None, model_override: str = None) -> str:
         """One escalation within one overall timeout. Returns '' on failure.
 
         A caller may supply the empirically selected category system prompt;
         per-category max_tokens caps still bound the completion.
+        ``model_override`` must already be an ALLOWED_MODELS member (the
+        retry tier passes ``secondary_model()``); a 404 on it falls back to
+        the primary selection on the next loop iteration.
         """
         deadline = time.monotonic() + max(1.0, timeout)
         retried = False
@@ -129,6 +163,9 @@ class Fireworks:
                 log.warning("escalation exceeded overall %.1fs timeout", timeout)
                 return ""
             model = self.model
+            if (model_override and model_override in self.allowed
+                    and model_override not in self.bad_models):
+                model = model_override
             if not self.available or model is None:
                 return ""
             with self._lock:

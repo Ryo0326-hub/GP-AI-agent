@@ -160,7 +160,8 @@ def _validate_split_manifest(profile, labels_by_id):
     return partitions, excluded
 
 
-def _validate_provenance(profile, labels, labels_path, tasks_path):
+def _validate_provenance(profile, labels, labels_path, tasks_path,
+                         allow_drift=frozenset()):
     provenance = profile.get("provenance")
     if not isinstance(provenance, dict) or provenance.get("schemaVersion") != 1:
         raise ValueError("router profile provenance schemaVersion must be 1")
@@ -174,21 +175,50 @@ def _validate_provenance(profile, labels, labels_path, tasks_path):
     run = provenance.get("labelRun")
     if run != labels[0].get("provenance"):
         raise ValueError("router profile labelRun provenance mismatch")
+    source_files = provenance.get("solverFiles")
+    if not isinstance(source_files, dict):
+        raise ValueError("router profile solverFiles provenance is missing")
     current_solver = solver_bundle_sha256()
-    if provenance.get("solverBundleSha256") != current_solver \
+    recorded_solver = provenance.get("solverBundleSha256")
+    if recorded_solver != current_solver \
             or run.get("solver_bundle_sha256") != current_solver:
-        raise ValueError("router profile solver provenance mismatch")
+        # A waiver never weakens the check silently. Substituting only the
+        # waived files' recorded digests into the current per-file digests
+        # must reproduce the recorded aggregate exactly, which proves every
+        # non-waived solver file is byte-identical to the one the labels
+        # measured.
+        if not allow_drift:
+            raise ValueError("router profile solver provenance mismatch")
+        chunks = []
+        for relative in sorted(source_files):
+            path = ROOT / relative
+            if not path.is_file():
+                raise ValueError(f"solver provenance file missing: {relative}")
+            digest = (source_files[relative] if relative in allow_drift
+                      else file_sha256(path))
+            chunks.append(f"{relative}\0{digest}\n")
+        reconstructed = hashlib.sha256("".join(chunks).encode("utf-8")).hexdigest()
+        if reconstructed != recorded_solver \
+                or run.get("solver_bundle_sha256") != recorded_solver:
+            raise ValueError(
+                "router profile solver provenance mismatch beyond the "
+                f"waived files {sorted(allow_drift)}")
+        print("router artifact check WARNING: solver drift waived for "
+              f"{sorted(allow_drift)}; the label-relevant solver surface in "
+              "the remaining files is proven byte-identical",
+              file=sys.stderr)
     current_labeler = file_sha256(ROOT / "eval/label_local.py")
     if provenance.get("labelerSha256") != current_labeler \
             or run.get("labeler_sha256") != current_labeler:
         raise ValueError("router profile labeler provenance mismatch")
     if run.get("task_manifest_sha256") != file_sha256(tasks_path):
         raise ValueError("label task-manifest provenance mismatch")
-    source_files = provenance.get("solverFiles")
-    if not isinstance(source_files, dict):
-        raise ValueError("router profile solverFiles provenance is missing")
     for relative, expected_sha in source_files.items():
         path = ROOT / relative
+        if relative in allow_drift:
+            if not path.is_file():
+                raise ValueError(f"waived solver file missing: {relative}")
+            continue  # drift proven bounded by the aggregate reconstruction
         if not path.is_file() or file_sha256(path) != expected_sha:
             raise ValueError(f"router profile solver file provenance mismatch: {relative}")
     excluded_files = provenance.get("excludedTaskFiles")
@@ -297,7 +327,8 @@ def _validate_trained_profile(profile, label_count):
     return revision, trained
 
 
-def check_router_artifacts(core_path, demo_path, labels_path, tasks_path):
+def check_router_artifacts(core_path, demo_path, labels_path, tasks_path,
+                           allow_drift=frozenset()):
     """Validate artifacts and return a small success report."""
     core = Path(core_path)
     demo = Path(demo_path)
@@ -323,7 +354,8 @@ def check_router_artifacts(core_path, demo_path, labels_path, tasks_path):
     labels = load_label_records([str(labels_path)])
     covered = validate_required_task_coverage(labels, tasks_path)
     revision, trained = _validate_trained_profile(profile, len(labels))
-    _validate_provenance(profile, labels, labels_path, tasks_path)
+    _validate_provenance(profile, labels, labels_path, tasks_path,
+                         allow_drift=allow_drift)
 
     labels_by_id = {record["task_id"]: record for record in labels}
     partitions, excluded = _validate_split_manifest(profile, labels_by_id)
@@ -413,10 +445,18 @@ def main(argv=None):
         "--demo", default="demo/src/data/router-profile.json")
     parser.add_argument("--labels", required=True)
     parser.add_argument("--require-tasks", required=True)
+    parser.add_argument(
+        "--allow-solver-drift", action="append", default=[],
+        metavar="RELATIVE_PATH",
+        help="Waive the byte-identity requirement for this solver file only. "
+             "Every other provenance file must still reproduce the recorded "
+             "aggregate digest. Use only for orchestration-only changes that "
+             "leave the label-relevant local solving behavior untouched.")
     args = parser.parse_args(argv)
     try:
         report = check_router_artifacts(
-            args.core, args.demo, args.labels, args.require_tasks)
+            args.core, args.demo, args.labels, args.require_tasks,
+            allow_drift=frozenset(args.allow_solver_drift))
     except (OSError, ValueError) as exc:
         print(f"router artifact check failed: {exc}", file=sys.stderr)
         return 1

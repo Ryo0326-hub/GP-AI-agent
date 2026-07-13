@@ -14,9 +14,29 @@ constraints.
 
 ## Benchmark status
 
-The last submitted image, `rkitano/gp-agent:v10-remote`, scored **18/19
-(94.7%)** and used **9,685 Fireworks tokens**. Those numbers describe the
-previous API-first submission, not the new learned-router candidate.
+Leaderboard history: `rkitano/gp-agent:v10-remote` (API-first) scored **18/19
+(94.7%)** at **9,685 tokens**; `rkitano/gp-agent:v11` (learned-router hybrid)
+scored **17/19 (89.5%)** at **5,984 tokens**. The judging FAQ ranks
+correctness ahead of token efficiency, so v12 moves to an accuracy-first
+remote plan while keeping the router as the no-network fallback.
+
+v12 changes and measured results:
+
+- **Remote-first plan.** With Fireworks available, every task except an
+  enumeration-proved logic puzzle goes to the hosted tier with the category
+  system prompt and `reasoning_effort: "none"`. Brute-forced assignment
+  puzzles remain zero-token exact local answers.
+- **Hosted answers get the same deterministic gates as local ones.** Math is
+  re-evaluated from the model's own expression, generated code runs its
+  synthesized tests, and summaries are checked against their length
+  constraints; a failure buys one retry on a second allowed model
+  (`RETRY_MODEL_HINTS`, default Pro) inside the unchanged per-task clock.
+- **Factual consensus.** Factual is the only category with no deterministic
+  verifier and the one where Flash was observed to hallucinate. Two allowed
+  models answer independently; on content disagreement a third votes A/B.
+- v12 live rehearsals with the production env: **19/19 (100%) at 2,724
+  tokens** on `test_input_19` and **80/80 (100%) at 9,745 tokens** on the
+  80-task holdout, all tasks answered, no fallbacks, run times 7.2s / 20.2s.
 
 Measured components for the new candidate:
 

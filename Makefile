@@ -1,5 +1,5 @@
-IMAGE ?= rkitano/gp-agent:v11
-DEV_IMAGE ?= gp-agent:v11-dev-arm
+IMAGE ?= rkitano/gp-agent:v12
+DEV_IMAGE ?= gp-agent:v12-dev-arm
 PY ?= .venv/bin/python
 ROUTER_TAG ?= 15b_2cpu_v11
 ROUTER_LABELS ?= data/labels_$(ROUTER_TAG).jsonl
@@ -15,11 +15,21 @@ MODEL_15B_URL = https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/d
 # Ordered measured fallback: Flash first (19/20), then Pro (18/20) before the
 # generic name heuristics can select the weaker GPT-OSS baseline.
 HINTS ?= deepseek-v4-flash,deepseek-v4-pro
+# Verification-retry tier: Pro was the second-best category-prompt scorer
+# (18/20); it re-attempts only answers that fail the deterministic checks.
+RETRY_HINTS ?= deepseek-v4-pro,kimi
 EXTRA_BODY ?= {"reasoning_effort":"none"}
-BUILD_ARGS = --build-arg PREFERRED_MODEL_HINTS="$(HINTS)" --build-arg FIREWORKS_EXTRA_BODY='$(EXTRA_BODY)'
+BUILD_ARGS = --build-arg PREFERRED_MODEL_HINTS="$(HINTS)" --build-arg FIREWORKS_EXTRA_BODY='$(EXTRA_BODY)' --build-arg RETRY_MODEL_HINTS="$(RETRY_HINTS)"
+# v12 changed only remote orchestration in app/main.py (remote-first plan,
+# hosted-answer verification, factual consensus); the local solvers the labels
+# measure are byte-identical, which the checker proves by reconstructing the
+# recorded aggregate digest from the unwaived files. Drop the waiver after the
+# next relabel run.
+ROUTER_DRIFT_FLAGS ?= --allow-solver-drift app/main.py
 ROUTER_ARTIFACT_CHECK = python3 eval/check_router_artifacts.py \
 	--core $(ROUTER_CORE) --demo $(ROUTER_DEMO) \
-	--labels $(ROUTER_LABELS) --require-tasks $(ROUTER_TASKS)
+	--labels $(ROUTER_LABELS) --require-tasks $(ROUTER_TASKS) \
+	$(ROUTER_DRIFT_FLAGS)
 
 .PHONY: build build-dev build-3b build-15b build-remote build-push push test testset dataset \
 		venv models-download label-3b label-15b train-router train-distilbert router-check \

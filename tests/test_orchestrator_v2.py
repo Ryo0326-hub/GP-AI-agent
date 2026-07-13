@@ -59,6 +59,9 @@ def _run(monkeypatch, tmp_path, scores, config, fw):
     monkeypatch.setenv("INPUT_PATH", str(inp))
     monkeypatch.setenv("OUTPUT_PATH", str(out))
     monkeypatch.setenv("TOTAL_DEADLINE_S", "540")
+    # These tests cover the learned-router hybrid plan, which remains the
+    # fallback when accuracy-first remote routing is disabled.
+    monkeypatch.setenv("REMOTE_FIRST", "0")
     monkeypatch.delenv("ROUTER_THRESHOLD", raising=False)
     for var in ("FIREWORKS_API_KEY", "FIREWORKS_BASE_URL", "ALLOWED_MODELS"):
         monkeypatch.delenv(var, raising=False)

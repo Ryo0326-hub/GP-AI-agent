@@ -51,6 +51,11 @@ TIGHT_ESCALATION_CAP = int(os.environ.get("TIGHT_ESCALATION_CAP", "160"))
 ESCALATION_WORKERS = 6
 BULK_ABORT_AFTER = 3  # probe wave; only definitive provider failures stop the rest
 ESCALATE_UNVERIFIED_LOGIC = os.environ.get("ESCALATE_UNVERIFIED_LOGIC", "1") == "1"
+# Accuracy-first mode (judging FAQ: correctness precedes token efficiency).
+# When Fireworks is reachable, every task except a deterministically
+# brute-forced logic puzzle is answered by the hosted tier; the local pipeline
+# remains the full fallback when Fireworks is missing or breaks mid-run.
+REMOTE_FIRST = os.environ.get("REMOTE_FIRST", "1") == "1"
 
 FALLBACK_ANSWER = "Unable to fully determine the answer within the time limit."
 
@@ -295,14 +300,115 @@ def record(i, answer, path, tasks, answers, paths, overwrite=True):
         return True
 
 
+def _remote_verified(category, prompt, text):
+    """Deterministic second gate for hosted answers, mirroring the local one.
+
+    Categories without an exact check return True: a failed retry there would
+    only replay the same temperature-0 request.
+    """
+    if not (text or "").strip():
+        return False
+    if category == "math":
+        expr = extract_labeled_line(text, "Expression")
+        stated = extract_last_number(extract_labeled_line(text, "Answer") or text)
+        try:
+            val = safe_eval(expr) if expr else None
+        except ValueError:
+            val = None
+        return val is not None and stated is not None and numbers_equal(val, stated)
+    if category in ("codegen", "debug"):
+        code = extract_code(text)
+        if not code:
+            return False
+        tests = synthesize_tests(prompt) or generic_smoke_tests(code)
+        if not tests:
+            return True
+        report = run_code_tests(code, tests)
+        return bool(report.get("ok")) and all(
+            r.get("passed") for r in report.get("results", []))
+    if category == "summarization":
+        return check_summary(text, parse_summary_constraints(prompt))[0]
+    if category == "sentiment":
+        return bool(_SENTIMENT_LABEL.search(text))
+    return True
+
+
+def _postprocess_remote(category, text):
+    if category == "math":
+        return _strip_expression_line(text)
+    return (text or "").strip()
+
+
+_AGREE_STOP = frozenset(
+    "the a an is are was were of in on at to and or it its by with for as "
+    "that this near located also which".split())
+
+
+def _answers_agree(a, b):
+    """Loose semantic agreement: matching final numbers plus high overlap of
+    content words. Verbose-vs-terse phrasings of the same fact still agree;
+    different named facts (e.g. two different lakes) do not."""
+    na, nb = extract_last_number(a), extract_last_number(b)
+    if na is not None and nb is not None and not numbers_equal(na, nb):
+        return False
+    wa = set(re.findall(r"[a-z0-9']+", (a or "").lower())) - _AGREE_STOP
+    wb = set(re.findall(r"[a-z0-9']+", (b or "").lower())) - _AGREE_STOP
+    if not wa or not wb:
+        return False
+    return len(wa & wb) / min(len(wa), len(wb)) >= 0.75
+
+
+_ARBITER_SYSTEM = ("You are verifying factual answers. Reply with exactly one "
+                   "letter: A or B.")
+
+
+def _factual_consensus(fw, prompt, cap, system, time_left):
+    """Cross-check a factual answer between two allowed models.
+
+    Factual is the only category without a deterministic verifier, and it is
+    where the hosted tier was observed to hallucinate. Disagreement is settled
+    by a third allowed model voting A/B; ties fall to the second (usually
+    larger) model. Every call stays inside the caller's remaining time.
+    """
+    t_end = time.monotonic() + time_left
+    a = fw.complete(prompt, cap, timeout=max(1.0, t_end - time.monotonic()),
+                    system=system)
+    second = fw.secondary_model()
+    if not second or t_end - time.monotonic() < 4.0:
+        return a
+    b = fw.complete(prompt, cap, timeout=max(1.0, t_end - time.monotonic()),
+                    system=system, model_override=second)
+    if not (b or "").strip():
+        return a
+    if not (a or "").strip() or _answers_agree(a, b):
+        return a if (a or "").strip() else b
+    arbiter = fw.pick_distinct({fw.model, second}, ())
+    if arbiter and t_end - time.monotonic() >= 3.0:
+        verdict = fw.complete(
+            f"Question: {prompt}\n\nAnswer A: {a}\n\nAnswer B: {b}\n\n"
+            "Which answer is more factually accurate and complete?",
+            10, timeout=max(1.0, t_end - time.monotonic()),
+            system=_ARBITER_SYSTEM, model_override=arbiter)
+        m = re.search(r"\b([AB])\b", verdict or "")
+        if m:
+            log.info("factual consensus: arbiter %s chose %s", arbiter, m.group(1))
+            return a if m.group(1) == "A" else b
+    # No usable arbiter: prefer the larger knowledge model's answer.
+    return b
+
+
 def _complete_with_task_deadline(fw, prompt, cap, task_started_at, deadline,
-                                 system=None):
+                                 system=None, category=None):
     """Call Fireworks within the task's real end-to-end time budget.
 
     This function runs inside the executor worker, so time spent waiting in
     the executor queue is included.  For reactive escalations,
     ``task_started_at`` is the start of the local attempt, preventing an 18s
     local solve followed by a fresh 25s remote allowance.
+
+    When ``category`` is given, the answer must pass the same deterministic
+    checks applied to local answers; a failure buys one retry on a different
+    allowed model inside the unchanged per-task clock.
     """
     now = time.monotonic()
     per_task_budget = min(PER_TASK_CAP_S, MAX_REQUEST_S)
@@ -314,7 +420,29 @@ def _complete_with_task_deadline(fw, prompt, cap, task_started_at, deadline,
     if remaining < 1.0:
         log.warning("skipping escalation: task deadline exhausted in queue")
         return ""
-    return fw.complete(prompt, cap, timeout=remaining, system=system)
+    if category == "factual" and getattr(fw, "pick_distinct", None):
+        return _postprocess_remote(
+            category, _factual_consensus(fw, prompt, cap, system, remaining))
+    text = fw.complete(prompt, cap, timeout=remaining, system=system)
+    if category is None or _remote_verified(category, prompt, text):
+        return _postprocess_remote(category, text)
+    retry_model = getattr(fw, "secondary_model", lambda: None)()
+    now = time.monotonic()
+    remaining = min(
+        ESCALATION_TIMEOUT_S,
+        task_started_at + per_task_budget - now,
+        deadline - now - 2.0,
+    )
+    if retry_model and remaining >= 4.0:
+        log.info("hosted answer failed %s verification; retrying on %s",
+                 category, retry_model)
+        text2 = fw.complete(prompt, cap, timeout=remaining, system=system,
+                            model_override=retry_model)
+        if _remote_verified(category, prompt, text2):
+            return _postprocess_remote(category, text2)
+        if not (text or "").strip():
+            text = text2
+    return _postprocess_remote(category, text)
 
 
 def submit_escalations(ex, fw, tasks, categories, indices, answers, paths,
@@ -333,7 +461,7 @@ def submit_escalations(ex, fw, tasks, categories, indices, answers, paths,
         queued_at = time.monotonic()
         task_started_at = (task_starts or {}).get(i, queued_at)
         fut = ex.submit(_complete_with_task_deadline, fw, prompt, cap,
-                        task_started_at, deadline, system)
+                        task_started_at, deadline, system, categories[i])
 
         def _cb(f, i=i):
             try:
@@ -359,7 +487,7 @@ def _escalate_batch(ex, fw, tasks, indices, answers, paths, deadline):
         system = SYSTEM.get(category)
         task_started_at = time.monotonic()
         futures[ex.submit(_complete_with_task_deadline, fw, prompt, cap,
-                          task_started_at, deadline, system)] = i
+                          task_started_at, deadline, system, category)] = i
     successes = 0
     timeout = deadline - time.monotonic() - 2.0
     if timeout <= 0:
@@ -454,17 +582,41 @@ def main() -> int:
     log.info("fireworks available=%s model=%s allowed=%d",
              fw.available, fw.model, len(fw.allowed))
 
+    # Zero-token exact wins: brute-forced assignment puzzles need no model at
+    # all, and the enumeration proves the answer unique before it is trusted.
+    pre_solved = set()
+    for i, (p, cat) in enumerate(zip(prompts, categories)):
+        if cat != "logic":
+            continue
+        solved = solve_assignment_puzzle(p)
+        if solved:
+            person, item, assign = solved
+            detail = "; ".join(f"{n} has the {it}" for n, it in assign.items())
+            record(i, (f"{person} owns the {item}. This is the only assignment "
+                       f"consistent with all the constraints: {detail}."),
+                   LOCAL_VERIFIED, tasks, answers, paths)
+            pre_solved.add(i)
+    if pre_solved:
+        log.info("%d logic task(s) solved exactly by enumeration", len(pre_solved))
+
     escalate_now, local_queue = build_plan(prompts, categories, scores,
                                            threshold, policy,
                                            expected_tokens=expected_tokens)
+    if REMOTE_FIRST and fw.available:
+        escalate_now = [i for i in range(n) if i not in pre_solved]
+        local_queue = []
+        log.info("remote-first mode: hosted tier answers all %d unsolved tasks",
+                 len(escalate_now))
     if not fw.available and escalate_now:
         log.warning("no Fireworks path; the %d planned escalations go local",
                     len(escalate_now))
         escalate_now, local_queue = build_plan(prompts, categories, None, 2.0,
                                                {}, expected_tokens=expected_tokens)
-    log.info("plan: %d immediate escalations, %d local "
+    escalate_now = [i for i in escalate_now if i not in pre_solved]
+    local_queue = [i for i in local_queue if i not in pre_solved]
+    log.info("plan: %d immediate escalations, %d local, %d pre-solved "
              "(router=%s threshold=%.2f policy=%s)",
-             len(escalate_now), len(local_queue),
+             len(escalate_now), len(local_queue), len(pre_solved),
              "on" if scores else "off", threshold, policy or "{}")
 
     ex = ThreadPoolExecutor(max_workers=ESCALATION_WORKERS)

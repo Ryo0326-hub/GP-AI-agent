@@ -13,6 +13,9 @@ ARG PREFERRED_MODEL_HINTS=""
 # Optional extra chat-completions params (JSON), e.g. a reasoning switch the
 # escalation eval showed saves tokens. Dropped automatically on 4xx.
 ARG FIREWORKS_EXTRA_BODY=""
+# Name patterns (never model IDs) for the verification-retry tier: a hosted
+# answer that fails the deterministic checks gets one retry on this model.
+ARG RETRY_MODEL_HINTS=""
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends curl ca-certificates libgomp1 build-essential cmake \
@@ -49,6 +52,8 @@ ENV MODEL_PATH=/models/model.gguf \
     ROUTER_DIR=/models/router \
     PREFERRED_MODEL_HINTS=$PREFERRED_MODEL_HINTS \
     FIREWORKS_EXTRA_BODY=$FIREWORKS_EXTRA_BODY \
+    RETRY_MODEL_HINTS=$RETRY_MODEL_HINTS \
+    REMOTE_FIRST=1 \
     PYTHONUNBUFFERED=1
 
 # Writes only to /output and /tmp at runtime.
